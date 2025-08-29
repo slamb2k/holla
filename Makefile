@@ -47,248 +47,256 @@ NC := \033[0m
 
 # Phony targets
 .PHONY: all help clean install uninstall test lint format check package deb rpm arch tar docker version
+.PHONY: docker-build docker-test docker-clean docker-run dev-test dev-run dev-clean
+.PHONY: ci-lint ci-test ci-build release-patch release-minor release-major
 
 ## help: Show this help message
 help:
-	@echo "$(GREEN)Yubikey PAM Installer - Build System$(NC)"
-	@echo ""
-	@echo "$(YELLOW)Available targets:$(NC)"
-	@grep -E '^## ' $(MAKEFILE_LIST) | sed 's/## /  /'
-	@echo ""
-	@echo "$(YELLOW)Package building:$(NC)"
-	@echo "  make package    - Build all package formats"
-	@echo "  make deb       - Build Debian package"
-	@echo "  make rpm       - Build RPM package"
-	@echo "  make arch      - Build Arch Linux package"
-	@echo "  make tar       - Build universal tarball"
-	@echo ""
-	@echo "$(YELLOW)Development:$(NC)"
-	@echo "  make test      - Run all tests"
-	@echo "  make lint      - Run shellcheck"
-	@echo "  make format    - Format shell scripts"
-	@echo "  make check     - Run all checks"
-	@echo ""
-	@echo "Current version: $(GREEN)$(VERSION)$(NC)"
+	@echo "$(YELLOW)Yubikey PAM Installer Build System$(NC)"
+	@echo
+	@echo "$(GREEN)Available targets:$(NC)"
+	@sed -n 's/^##//p' $(MAKEFILE_LIST) | column -t -s ':' | sed -e 's/^/ /'
+	@echo
+	@echo "$(GREEN)Project info:$(NC)"
+	@echo "  Name: $(NAME)"
+	@echo "  Version: $(FULL_VERSION)"
+	@echo "  Git commit: $(GIT_COMMIT)"
+	@echo
+
+## all: Build all packages
+all: clean check package
+
+## version: Show version information
+version:
+	@echo "$(NAME) $(FULL_VERSION)"
+	@echo "Build date: $(BUILD_DATE)"
+	@echo "Git commit: $(GIT_COMMIT)"
 
 ## clean: Remove build artifacts
 clean:
 	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
 	rm -rf $(BUILD_DIR) $(DIST_DIR)
-	rm -f *.deb *.rpm *.pkg.tar.xz *.tar.gz
 	@echo "$(GREEN)✓ Clean complete$(NC)"
 
-## version: Display version information
-version:
-	@echo "Version: $(VERSION)"
-	@echo "Release: $(RELEASE)"
-	@echo "Git Commit: $(GIT_COMMIT)"
-	@echo "Build Date: $(BUILD_DATE)"
-
-# Create build directories
-$(BUILD_DIR) $(DIST_DIR) $(PACKAGE_DIR):
-	mkdir -p $@
-
-# Prepare package structure
-prepare: $(PACKAGE_DIR)
-	@echo "$(YELLOW)Preparing package structure...$(NC)"
+## prepare: Create build directories and copy files
+prepare: clean
+	@echo "$(YELLOW)Preparing build environment...$(NC)"
 	
-	# Create directory structure
+	# Create directories
 	mkdir -p $(PACKAGE_DIR)/usr/local/bin
 	mkdir -p $(PACKAGE_DIR)/usr/share/$(NAME)/src
-	mkdir -p $(PACKAGE_DIR)/usr/share/$(NAME)/docs
 	mkdir -p $(PACKAGE_DIR)/usr/share/$(NAME)/tests
-	mkdir -p $(PACKAGE_DIR)/etc/$(NAME)
-	mkdir -p $(PACKAGE_DIR)/usr/share/man/man1
+	mkdir -p $(PACKAGE_DIR)/usr/share/$(NAME)/docs
+	mkdir -p $(PACKAGE_DIR)/usr/share/doc/$(NAME)
+	mkdir -p $(PACKAGE_DIR)/DEBIAN
+	mkdir -p $(DIST_DIR)
 	
-	# Copy main scripts
+	# Copy source files
 	cp $(SRC_FILES) $(PACKAGE_DIR)/usr/share/$(NAME)/src/
-	chmod 755 $(PACKAGE_DIR)/usr/share/$(NAME)/src/*.sh
-	
-	# Copy demo and test scripts
-	cp $(DEMO_FILES) $(SIMPLE_TEST_FILES) $(PACKAGE_DIR)/usr/share/$(NAME)/
-	chmod 755 $(PACKAGE_DIR)/usr/share/$(NAME)/*.sh
-	
-	# Copy tests
-	cp -r tests/* $(PACKAGE_DIR)/usr/share/$(NAME)/tests/ 2>/dev/null || true
+	cp $(TEST_FILES) $(PACKAGE_DIR)/usr/share/$(NAME)/tests/ 2>/dev/null || true
+	cp $(DEMO_FILES) $(PACKAGE_DIR)/usr/share/$(NAME)/ 2>/dev/null || true
+	cp run_tests.sh $(PACKAGE_DIR)/usr/share/$(NAME)/ 2>/dev/null || true
 	
 	# Copy documentation
+	cp README.md CLAUDE.md $(PACKAGE_DIR)/usr/share/doc/$(NAME)/ 2>/dev/null || true
 	cp -r docs/* $(PACKAGE_DIR)/usr/share/$(NAME)/docs/ 2>/dev/null || true
-	cp README.md CLAUDE.md $(PACKAGE_DIR)/usr/share/$(NAME)/docs/ 2>/dev/null || true
 	
-	# Create wrapper scripts
-	echo '#!/bin/bash' > $(PACKAGE_DIR)/usr/local/bin/yubikey-pam-install
-	echo 'exec /usr/share/$(NAME)/src/install.sh "$$@"' >> $(PACKAGE_DIR)/usr/local/bin/yubikey-pam-install
-	chmod 755 $(PACKAGE_DIR)/usr/local/bin/yubikey-pam-install
+	# Copy scripts
+	cp scripts/* $(PACKAGE_DIR)/usr/share/$(NAME)/scripts/ 2>/dev/null || mkdir -p $(PACKAGE_DIR)/usr/share/$(NAME)/scripts
 	
-	echo '#!/bin/bash' > $(PACKAGE_DIR)/usr/local/bin/yubikey-pam-register
-	echo 'exec /usr/share/$(NAME)/src/u2f_registration.sh "$$@"' >> $(PACKAGE_DIR)/usr/local/bin/yubikey-pam-register
-	chmod 755 $(PACKAGE_DIR)/usr/local/bin/yubikey-pam-register
+	# Make scripts executable
+	chmod +x $(PACKAGE_DIR)/usr/share/$(NAME)/src/*.sh
+	chmod +x $(PACKAGE_DIR)/usr/share/$(NAME)/*.sh 2>/dev/null || true
 	
-	# Create version file
-	echo "$(VERSION)" > $(PACKAGE_DIR)/usr/share/$(NAME)/VERSION
-	
-	@echo "$(GREEN)✓ Package structure prepared$(NC)"
+	@echo "$(GREEN)✓ Prepare complete$(NC)"
 
-## test: Run all tests
+## lint: Run shellcheck on all shell scripts
+lint:
+	@echo "$(YELLOW)Running shellcheck...$(NC)"
+	shellcheck $(SRC_FILES) $(DEMO_FILES) $(SIMPLE_TEST_FILES)
+	@echo "$(GREEN)✓ Lint passed$(NC)"
+
+## format: Format shell scripts with shfmt
+format:
+	@echo "$(YELLOW)Formatting shell scripts...$(NC)"
+	shfmt -i 2 -w $(SRC_FILES) $(DEMO_FILES) $(SIMPLE_TEST_FILES)
+	@echo "$(GREEN)✓ Format complete$(NC)"
+
+## test: Run test suites
 test:
 	@echo "$(YELLOW)Running tests...$(NC)"
-	@for test in $(SIMPLE_TEST_FILES); do \
+	for test in $(SIMPLE_TEST_FILES); do \
 		echo "Running $$test..."; \
 		./$$test || exit 1; \
 	done
 	@echo "$(GREEN)✓ All tests passed$(NC)"
 
-## lint: Run shellcheck on all shell scripts
-lint:
-	@echo "$(YELLOW)Running shellcheck...$(NC)"
-	@if command -v shellcheck >/dev/null 2>&1; then \
-		shellcheck -S warning $(SRC_FILES) $(DEMO_FILES) $(SIMPLE_TEST_FILES) || exit 1; \
-		echo "$(GREEN)✓ Shellcheck passed$(NC)"; \
-	else \
-		echo "$(RED)✗ shellcheck not installed$(NC)"; \
-		exit 1; \
-	fi
-
-## format: Format shell scripts with shfmt
-format:
-	@echo "$(YELLOW)Formatting shell scripts...$(NC)"
-	@if command -v shfmt >/dev/null 2>&1; then \
-		shfmt -i 2 -w $(SRC_FILES) $(DEMO_FILES) $(SIMPLE_TEST_FILES); \
-		echo "$(GREEN)✓ Formatting complete$(NC)"; \
-	else \
-		echo "$(RED)✗ shfmt not installed$(NC)"; \
-		exit 1; \
-	fi
-
-## check: Run all quality checks
+## check: Run lint and test
 check: lint test
 	@echo "$(GREEN)✓ All checks passed$(NC)"
 
-## install: Install locally (requires sudo)
-install: prepare
-	@echo "$(YELLOW)Installing locally...$(NC)"
-	sudo cp -r $(PACKAGE_DIR)/* /
+## install: Install system-wide (requires sudo)
+install: check prepare
+	@echo "$(YELLOW)Installing system-wide...$(NC)"
+	
+	# Create system directories
+	sudo mkdir -p /usr/local/bin
+	sudo mkdir -p /usr/share/$(NAME)
+	
+	# Copy files
+	sudo cp -r $(PACKAGE_DIR)/usr/share/$(NAME)/* /usr/share/$(NAME)/
+	sudo cp scripts/postinst.sh /usr/share/$(NAME)/install.sh 2>/dev/null || echo "No postinst script"
+	sudo cp scripts/prerm.sh /usr/share/$(NAME)/uninstall.sh 2>/dev/null || echo "No prerm script"
+	
+	# Make executable
+	sudo chmod +x /usr/share/$(NAME)/src/*.sh
+	sudo chmod +x /usr/share/$(NAME)/*.sh 2>/dev/null || true
+	
 	@echo "$(GREEN)✓ Installation complete$(NC)"
-	@echo "Run 'yubikey-pam-register' to register your Yubikey"
+	@echo "Run: /usr/share/$(NAME)/install.sh to configure PAM"
 
-## uninstall: Uninstall from system (requires sudo)
+## uninstall: Remove system installation (requires sudo)
 uninstall:
 	@echo "$(YELLOW)Uninstalling...$(NC)"
+	sudo /usr/share/$(NAME)/uninstall.sh 2>/dev/null || echo "Uninstall script not found"
 	sudo rm -rf /usr/share/$(NAME)
-	sudo rm -f /usr/local/bin/yubikey-pam-*
-	@echo "$(GREEN)✓ Uninstallation complete$(NC)"
+	@echo "$(GREEN)✓ Uninstall complete$(NC)"
+
+## package: Build all package formats
+package: prepare deb rpm arch tar
+	@echo "$(GREEN)✓ All packages built in $(DIST_DIR)/$(NC)"
 
 ## deb: Build Debian package
-deb: prepare $(DIST_DIR)
+deb: prepare
 	@echo "$(YELLOW)Building Debian package...$(NC)"
-	@if ! command -v fpm >/dev/null 2>&1; then \
-		echo "$(RED)✗ FPM not installed. Run: gem install fpm$(NC)"; \
-		exit 1; \
-	fi
 	
+	# Check if fpm exists
+	@which fpm > /dev/null || (echo "$(RED)Error: fpm not found. Install with: gem install fpm$(NC)" && exit 1)
+	
+	# Create Debian control files
+	echo "#!/bin/bash" > $(PACKAGE_DIR)/DEBIAN/postinst
+	cat scripts/postinst.sh >> $(PACKAGE_DIR)/DEBIAN/postinst 2>/dev/null || echo "echo 'Post-install complete'"  >> $(PACKAGE_DIR)/DEBIAN/postinst
+	chmod 755 $(PACKAGE_DIR)/DEBIAN/postinst
+	
+	echo "#!/bin/bash" > $(PACKAGE_DIR)/DEBIAN/prerm
+	cat scripts/prerm.sh >> $(PACKAGE_DIR)/DEBIAN/prerm 2>/dev/null || echo "echo 'Pre-remove complete'" >> $(PACKAGE_DIR)/DEBIAN/prerm
+	chmod 755 $(PACKAGE_DIR)/DEBIAN/prerm
+	
+	echo "#!/bin/bash" > $(PACKAGE_DIR)/DEBIAN/postrm
+	cat scripts/postrm.sh >> $(PACKAGE_DIR)/DEBIAN/postrm 2>/dev/null || echo "echo 'Post-remove complete'" >> $(PACKAGE_DIR)/DEBIAN/postrm
+	chmod 755 $(PACKAGE_DIR)/DEBIAN/postrm
+	
+	# Build package
 	fpm -s dir -t deb \
 		-n $(NAME) \
 		-v $(VERSION) \
 		--iteration $(RELEASE) \
 		-a $(ARCH) \
-		-m "$(MAINTAINER)" \
-		--description "$(DESCRIPTION)" \
-		--url "$(URL)" \
-		--license "$(LICENSE)" \
+		-m $(MAINTAINER) \
+		--description $(DESCRIPTION) \
+		--url $(URL) \
+		--license $(LICENSE) \
 		$(DEB_DEPENDS) \
-		--after-install scripts/postinst.sh \
-		--before-remove scripts/prerm.sh \
-		--after-remove scripts/postrm.sh \
-		--deb-no-default-config-files \
+		--deb-compression xz \
+		--config-files /usr/share/$(NAME) \
+		-p $(DIST_DIR)/$(NAME)_$(FULL_VERSION)_$(ARCH).deb \
 		-C $(PACKAGE_DIR) \
-		--package $(DIST_DIR)/ \
 		.
 	
-	@echo "$(GREEN)✓ Debian package built: $(DIST_DIR)/$(NAME)_$(VERSION)-$(RELEASE)_$(ARCH).deb$(NC)"
+	@echo "$(GREEN)✓ Debian package: $(DIST_DIR)/$(NAME)_$(FULL_VERSION)_$(ARCH).deb$(NC)"
 
 ## rpm: Build RPM package
-rpm: prepare $(DIST_DIR)
+rpm: prepare
 	@echo "$(YELLOW)Building RPM package...$(NC)"
-	@if ! command -v fpm >/dev/null 2>&1; then \
-		echo "$(RED)✗ FPM not installed. Run: gem install fpm$(NC)"; \
-		exit 1; \
-	fi
+	
+	# Check if fpm exists
+	@which fpm > /dev/null || (echo "$(RED)Error: fpm not found. Install with: gem install fpm$(NC)" && exit 1)
 	
 	fpm -s dir -t rpm \
 		-n $(NAME) \
 		-v $(VERSION) \
 		--iteration $(RELEASE) \
-		-a noarch \
-		-m "$(MAINTAINER)" \
-		--description "$(DESCRIPTION)" \
-		--url "$(URL)" \
-		--license "$(LICENSE)" \
+		-a $(ARCH) \
+		-m $(MAINTAINER) \
+		--description $(DESCRIPTION) \
+		--url $(URL) \
+		--license $(LICENSE) \
 		$(RPM_DEPENDS) \
-		--after-install scripts/postinst.sh \
-		--before-remove scripts/prerm.sh \
-		--after-remove scripts/postrm.sh \
+		--rpm-compression xz \
+		--config-files /usr/share/$(NAME) \
+		-p $(DIST_DIR)/$(NAME)-$(FULL_VERSION).$(ARCH).rpm \
 		-C $(PACKAGE_DIR) \
-		--package $(DIST_DIR)/ \
 		.
 	
-	@echo "$(GREEN)✓ RPM package built: $(DIST_DIR)/$(NAME)-$(VERSION)-$(RELEASE).noarch.rpm$(NC)"
+	@echo "$(GREEN)✓ RPM package: $(DIST_DIR)/$(NAME)-$(FULL_VERSION).$(ARCH).rpm$(NC)"
 
-## arch: Build Arch Linux package
-arch: prepare $(DIST_DIR)
-	@echo "$(YELLOW)Building Arch Linux package...$(NC)"
-	@if ! command -v fpm >/dev/null 2>&1; then \
-		echo "$(RED)✗ FPM not installed. Run: gem install fpm$(NC)"; \
-		exit 1; \
-	fi
+## arch: Build Arch package
+arch: prepare
+	@echo "$(YELLOW)Building Arch package...$(NC)"
+	
+	# Check if fpm exists
+	@which fpm > /dev/null || (echo "$(RED)Error: fpm not found. Install with: gem install fpm$(NC)" && exit 1)
 	
 	fpm -s dir -t pacman \
 		-n $(NAME) \
 		-v $(VERSION) \
 		--iteration $(RELEASE) \
-		-a any \
-		-m "$(MAINTAINER)" \
-		--description "$(DESCRIPTION)" \
-		--url "$(URL)" \
-		--license "$(LICENSE)" \
+		-a $(ARCH) \
+		-m $(MAINTAINER) \
+		--description $(DESCRIPTION) \
+		--url $(URL) \
+		--license $(LICENSE) \
 		$(ARCH_DEPENDS) \
+		--config-files /usr/share/$(NAME) \
+		-p $(DIST_DIR)/$(NAME)-$(FULL_VERSION)-$(ARCH).pkg.tar.xz \
 		-C $(PACKAGE_DIR) \
-		--package $(DIST_DIR)/ \
 		.
 	
-	@echo "$(GREEN)✓ Arch package built: $(DIST_DIR)/$(NAME)-$(VERSION)-$(RELEASE)-any.pkg.tar.xz$(NC)"
+	@echo "$(GREEN)✓ Arch package: $(DIST_DIR)/$(NAME)-$(FULL_VERSION)-$(ARCH).pkg.tar.xz$(NC)"
 
-## tar: Build universal tarball
-tar: prepare $(DIST_DIR)
-	@echo "$(YELLOW)Building universal tarball...$(NC)"
-	cd $(PACKAGE_DIR) && tar czf ../../$(DIST_DIR)/$(NAME)-$(VERSION).tar.gz *
-	@echo "$(GREEN)✓ Tarball built: $(DIST_DIR)/$(NAME)-$(VERSION).tar.gz$(NC)"
+## tar: Build tarball
+tar: prepare
+	@echo "$(YELLOW)Building tarball...$(NC)"
+	
+	tar -czf $(DIST_DIR)/$(NAME)-$(FULL_VERSION).tar.gz \
+		-C $(PACKAGE_DIR) \
+		--transform 's,^\.,$(NAME)-$(FULL_VERSION),' \
+		.
+	
+	@echo "$(GREEN)✓ Tarball: $(DIST_DIR)/$(NAME)-$(FULL_VERSION).tar.gz$(NC)"
 
-## package: Build all package formats
-package: deb rpm arch tar
-	@echo "$(GREEN)✓ All packages built successfully$(NC)"
-	@ls -lh $(DIST_DIR)/
+## docker-build: Build Docker test image
+docker-build:
+	@echo "$(YELLOW)Building Docker test image...$(NC)"
+	docker build -f Dockerfile.test -t $(NAME)-test:$(VERSION) -t $(NAME)-test:latest .
+	@echo "$(GREEN)✓ Docker image built: $(NAME)-test:$(VERSION)$(NC)"
 
-## docker: Build Docker image
-docker: prepare
-	@echo "$(YELLOW)Building Docker image...$(NC)"
-	
-	# Create Dockerfile
-	echo "FROM ubuntu:22.04" > $(BUILD_DIR)/Dockerfile
-	echo "RUN apt-get update && apt-get install -y libpam-u2f pamu2fcfg bash sudo && rm -rf /var/lib/apt/lists/*" >> $(BUILD_DIR)/Dockerfile
-	echo "COPY package/usr/share/$(NAME) /usr/share/$(NAME)" >> $(BUILD_DIR)/Dockerfile
-	echo "COPY package/usr/local/bin/* /usr/local/bin/" >> $(BUILD_DIR)/Dockerfile
-	echo "RUN chmod +x /usr/share/$(NAME)/src/*.sh /usr/local/bin/*" >> $(BUILD_DIR)/Dockerfile
-	echo "WORKDIR /usr/share/$(NAME)" >> $(BUILD_DIR)/Dockerfile
-	echo "ENTRYPOINT [\"/bin/bash\"]" >> $(BUILD_DIR)/Dockerfile
-	
-	# Build image
-	docker build -t $(NAME):$(VERSION) -t $(NAME):latest $(BUILD_DIR)
-	
-	@echo "$(GREEN)✓ Docker image built: $(NAME):$(VERSION)$(NC)"
+## docker-test: Run tests in Docker container
+docker-test: docker-build
+	@echo "$(YELLOW)Running tests in Docker...$(NC)"
+	docker run --rm $(NAME)-test:latest
+	@echo "$(GREEN)✓ Docker tests completed$(NC)"
+
+## docker-run: Run interactive shell in Docker container
+docker-run: docker-build
+	@echo "$(YELLOW)Starting interactive Docker container...$(NC)"
+	docker run --rm -it $(NAME)-test:latest bash
+
+## docker-compose-test: Run full test matrix with Docker Compose
+docker-compose-test:
+	@echo "$(YELLOW)Running test matrix with Docker Compose...$(NC)"
+	docker-compose up --build ubuntu20-test ubuntu24-test
+	docker-compose down
+	@echo "$(GREEN)✓ Docker Compose tests completed$(NC)"
+
+## docker-clean: Clean Docker images
+docker-clean:
+	@echo "$(YELLOW)Cleaning Docker images...$(NC)"
+	docker rmi $(NAME)-test:latest $(NAME)-test:$(VERSION) 2>/dev/null || true
+	docker-compose down --rmi all 2>/dev/null || true
+	@echo "$(GREEN)✓ Docker cleanup complete$(NC)"
 
 # Development shortcuts
-.PHONY: dev-test dev-run dev-clean
-
 ## dev-test: Quick test during development
 dev-test:
 	@./simple_test.sh && ./simple_backup_test.sh && ./simple_registration_test.sh
@@ -303,8 +311,6 @@ dev-run:
 dev-clean: clean package
 
 # CI/CD helpers
-.PHONY: ci-lint ci-test ci-build
-
 ci-lint:
 	@shellcheck -S error $(SRC_FILES)
 
@@ -315,8 +321,6 @@ ci-build: check package
 	@echo "Build artifacts in $(DIST_DIR)/"
 
 # Release management
-.PHONY: release-patch release-minor release-major
-
 release-patch:
 	@echo "Current version: $(VERSION)"
 	@echo "Creating patch release..."
