@@ -1,0 +1,42 @@
+# Test and development Dockerfile for Yubikey PAM Installer
+# This provides a clean environment for testing PAM integration
+FROM ubuntu:22.04
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install required packages for testing
+RUN apt-get update && apt-get install -y \
+    bash \
+    bats \
+    libpam-u2f \
+    pamu2fcfg \
+    git \
+    curl \
+    shellcheck \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create test user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:testpass" | chpasswd
+
+# Set up working directory
+WORKDIR /app
+
+# Copy project files
+COPY . .
+
+# Make scripts executable
+RUN chmod +x src/*.sh demo_*.sh simple_*.sh run_tests.sh
+
+# Create mock PAM directories for testing
+RUN mkdir -p /etc/pam.d.backup && \
+    cp -r /etc/pam.d/* /etc/pam.d.backup/ || true
+
+# Default command runs the test suite
+CMD ["./run_tests.sh"]
+
+# Label for metadata
+LABEL maintainer="slamb2k <slamb2k@github.com>"
+LABEL description="Test environment for Yubikey PAM Installer"
+LABEL version="1.0.0"

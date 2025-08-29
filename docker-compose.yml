@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # Main testing environment
+  yubikey-pam-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: yubikey-pam-test
+    volumes:
+      - .:/app
+      - /dev/log:/dev/log  # For syslog testing
+    privileged: true  # Required for PAM testing
+    environment:
+      - TERM=xterm
+      - TESTING_MODE=1
+    command: ["bash"]
+    tty: true
+    stdin_open: true
+
+  # Ubuntu 20.04 compatibility test
+  ubuntu20-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      args:
+        BASE_IMAGE: ubuntu:20.04
+    container_name: yubikey-pam-ubuntu20
+    volumes:
+      - .:/app
+    environment:
+      - UBUNTU_VERSION=20.04
+    command: ["./run_tests.sh"]
+
+  # Ubuntu 24.04 latest test
+  ubuntu24-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      args:
+        BASE_IMAGE: ubuntu:24.04
+    container_name: yubikey-pam-ubuntu24
+    volumes:
+      - .:/app
+    environment:
+      - UBUNTU_VERSION=24.04
+    command: ["./run_tests.sh"]
+
+networks:
+  default:
+    name: yubikey-pam-network
