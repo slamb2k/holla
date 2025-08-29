@@ -13,6 +13,7 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
+      - "auto-merge"
     commit-message:
       prefix: "ci"
       include: "scope"
@@ -30,6 +31,7 @@ updates:
     labels:
       - "dependencies"
       - "docker"
+      - "auto-merge"
     commit-message:
       prefix: "build"
       include: "scope"
