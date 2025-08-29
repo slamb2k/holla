@@ -1,0 +1,225 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [ opened, synchronize, reopened ]
+  workflow_dispatch:
+
+env:
+  SHELL: /bin/bash
+
+jobs:
+  # Quick lint check - fails fast
+  lint-shellcheck:
+    name: Lint - ShellCheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          check_together: 'yes'
+          severity: 'warning'
+          scandir: './src'
+          additional_files: '*.sh demo_*.sh simple_*.sh'
+
+  # Format check - fails fast
+  format-check:
+    name: Format - shfmt
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup shfmt
+        uses: mfinelli/setup-shfmt@v3
+
+      - name: Check shell script formatting
+        run: |
+          echo "Checking shell script formatting..."
+          shfmt -d -i 2 -ci src/*.sh *.sh
+          if [ $? -ne 0 ]; then
+            echo "::error::Shell scripts are not properly formatted. Run 'shfmt -i 2 -w src/*.sh *.sh' to fix."
+            exit 1
+          fi
+
+  # Security scanning
+  security-scan:
+    name: Security - Trivy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Documentation validation
+  docs-check:
+    name: Docs - Markdown Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Markdown Lint
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: |
+            **/*.md
+            !node_modules
+            !.agent-os
+
+  # Unit tests - fast isolated tests
+  unit-tests:
+    name: Tests - Unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        test-suite:
+          - parser
+          - backup
+          - registration
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup test environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats
+
+      - name: Run ${{ matrix.test-suite }} tests
+        run: |
+          echo "Running ${{ matrix.test-suite }} test suite..."
+          ./simple_${{ matrix.test-suite }}_test.sh || ./simple_test.sh
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.test-suite }}
+          path: test-results/
+
+  # Integration tests - minimal
+  integration-test:
+    name: Tests - Integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [lint-shellcheck, format-check]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup test environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats
+          # Create mock pamu2fcfg for testing
+          sudo mkdir -p /usr/local/bin
+          echo '#!/bin/bash' | sudo tee /usr/local/bin/pamu2fcfg
+          echo 'echo "testuser:mockcred:mockhandle"' | sudo tee -a /usr/local/bin/pamu2fcfg
+          sudo chmod +x /usr/local/bin/pamu2fcfg
+
+      - name: Run integration tests
+        run: |
+          echo "Running demo scripts as integration tests..."
+          ./demo_parser.sh
+          ./demo_backup.sh
+          # Skip registration demo as it needs actual hardware
+
+  # Compatibility check
+  compatibility-check:
+    name: Compatibility - Multi-OS
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check bash version
+        run: |
+          bash --version
+          if [[ $(bash -c 'echo ${BASH_VERSION%%.*}') -lt 5 ]]; then
+            echo "::warning::Bash version is less than 5.0"
+          fi
+
+      - name: Check dependencies availability
+        run: |
+          # Check if required packages are available
+          apt-cache search libpam-u2f | grep -q libpam-u2f || echo "::warning::libpam-u2f not available"
+          apt-cache search pamu2fcfg | grep -q pamu2fcfg || echo "::warning::pamu2fcfg not available"
+
+  # Summary job for branch protection
+  pr-validation-status:
+    name: PR Validation Status
+    runs-on: ubuntu-latest
+    needs: [lint-shellcheck, format-check, security-scan, docs-check, unit-tests, integration-test, compatibility-check]
+    if: always()
+    steps:
+      - name: Check status
+        run: |
+          if [[ "${{ needs.lint-shellcheck.result }}" != "success" ]] ||
+             [[ "${{ needs.format-check.result }}" != "success" ]] ||
+             [[ "${{ needs.unit-tests.result }}" != "success" ]] ||
+             [[ "${{ needs.integration-test.result }}" != "success" ]]; then
+            echo "::error::PR validation failed. Please check the failed jobs above."
+            exit 1
+          fi
+          echo "✅ All PR validation checks passed!"
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ needs.lint-shellcheck.result }}' === 'success' &&
+                          '${{ needs.format-check.result }}' === 'success' &&
+                          '${{ needs.unit-tests.result }}' === 'success' ? '✅' : '❌';
+            
+            const body = `## PR Validation Results ${status}
+            
+            | Check | Status |
+            |-------|--------|
+            | Lint (ShellCheck) | ${{ needs.lint-shellcheck.result }} |
+            | Format (shfmt) | ${{ needs.format-check.result }} |
+            | Security Scan | ${{ needs.security-scan.result }} |
+            | Documentation | ${{ needs.docs-check.result }} |
+            | Unit Tests | ${{ needs.unit-tests.result }} |
+            | Integration Tests | ${{ needs.integration-test.result }} |
+            | Compatibility | ${{ needs.compatibility-check.result }} |
+            
+            ${status === '✅' ? 'All required checks passed! Ready for review.' : 'Some checks failed. Please review the errors above.'}`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

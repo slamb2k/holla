@@ -1,0 +1,51 @@
+# Build artifacts
+build/
+dist/
+*.deb
+*.rpm
+*.pkg.tar.xz
+*.tar.gz
+
+# Test artifacts
+test-results/
+*.log
+*.backup
+*~
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Coverage reports
+coverage/
+*.coverage
+
+# Docker
+.dockerignore
+*.tar
+
+# Package manager
+node_modules/
+vendor/
+
+# Local configuration
+.env
+.env.local
+config.local
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Backup files
+*.bak
+*.backup-*
+/etc/pam.d.backup-*

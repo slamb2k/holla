@@ -1,0 +1,233 @@
+name: Security Scan
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '**/*.sh'
+      - '.github/workflows/security-scan.yml'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  shellcheck-security:
+    name: ShellCheck Security Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck with security focus
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          check_together: 'yes'
+          severity: 'style'  # Check all severity levels
+          scandir: '.'
+          format: 'json'
+        continue-on-error: true
+
+      - name: Parse ShellCheck results
+        if: always()
+        run: |
+          echo "## ShellCheck Security Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Checking for common security issues in shell scripts:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for dangerous patterns
+          echo "### Dangerous Patterns Check" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for eval usage
+          if grep -r "eval " --include="*.sh" .; then
+            echo "⚠️ Found 'eval' usage - potential code injection risk" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No 'eval' usage found" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check for unquoted variables
+          if grep -r '\$[A-Za-z_][A-Za-z0-9_]*[^"]' --include="*.sh" . | grep -v '^\s*#'; then
+            echo "⚠️ Found unquoted variables - potential injection risk" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Variables appear to be properly quoted" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check for hardcoded credentials
+          if grep -rE "(password|passwd|pwd|secret|api_key|apikey|token)[ ]*=[ ]*['\"]" --include="*.sh" .; then
+            echo "⚠️ Potential hardcoded credentials found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No hardcoded credentials detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  trivy-scan:
+    name: Trivy Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '0'  # Don't fail the workflow
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Generate Trivy Report
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+          exit-code: '0'
+
+  permission-audit:
+    name: File Permission Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check file permissions
+        run: |
+          echo "## File Permission Audit" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Find files with overly permissive permissions
+          echo "### Checking for overly permissive files" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for world-writable files
+          world_writable=$(find . -type f -perm -002 2>/dev/null | grep -v '.git' || true)
+          if [ -n "$world_writable" ]; then
+            echo "⚠️ World-writable files found:" >> $GITHUB_STEP_SUMMARY
+            echo "$world_writable" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No world-writable files found" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check for files with setuid/setgid
+          setuid_files=$(find . -type f \( -perm -4000 -o -perm -2000 \) 2>/dev/null | grep -v '.git' || true)
+          if [ -n "$setuid_files" ]; then
+            echo "⚠️ Files with setuid/setgid found:" >> $GITHUB_STEP_SUMMARY
+            echo "$setuid_files" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No setuid/setgid files found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for vulnerable dependencies
+        run: |
+          echo "## Dependency Security Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for known vulnerable package dependencies
+          echo "### PAM Module Dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # List required system packages
+          echo "Required packages:" >> $GITHUB_STEP_SUMMARY
+          echo "- libpam-u2f" >> $GITHUB_STEP_SUMMARY
+          echo "- pamu2fcfg" >> $GITHUB_STEP_SUMMARY
+          echo "- bash (>= 5.0)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "⚠️ Manual review recommended for system package vulnerabilities" >> $GITHUB_STEP_SUMMARY
+
+  pam-security-check:
+    name: PAM Configuration Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Analyze PAM configuration security
+        run: |
+          echo "## PAM Security Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for dangerous PAM configurations
+          echo "### PAM Configuration Security Checks" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for proper fallback mechanisms
+          if grep -r "sufficient.*pam_u2f" src/; then
+            echo "✅ Using 'sufficient' control flag for graceful fallback" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Review control flag usage for pam_u2f" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check for backup creation
+          if grep -r "backup" src/backup_system.sh; then
+            echo "✅ Backup system implemented" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No backup system found" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check for proper permission checks
+          if grep -r "chmod 600" src/; then
+            echo "✅ Proper file permissions (600) enforced" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Review file permission settings" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  create-issue:
+    name: Create Security Issue
+    runs-on: ubuntu-latest
+    needs: [shellcheck-security, trivy-scan, permission-audit, dependency-check, pam-security-check]
+    if: failure() && github.event_name == 'schedule'
+    steps:
+      - name: Create issue for security findings
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `Security Scan Alert - ${new Date().toISOString().split('T')[0]}`;
+            const body = `## Security Scan Results
+            
+            The scheduled security scan has identified potential issues that require review.
+            
+            ### Scan Details
+            - **Run**: [${context.runId}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+            - **Triggered by**: Scheduled scan
+            - **Date**: ${new Date().toISOString()}
+            
+            ### Required Actions
+            1. Review the security scan results in the workflow run
+            2. Address any critical or high severity findings
+            3. Update this issue with remediation status
+            
+            ### Checklist
+            - [ ] Review ShellCheck security findings
+            - [ ] Review Trivy vulnerability scan
+            - [ ] Check file permissions
+            - [ ] Audit dependencies
+            - [ ] Verify PAM security configuration
+            
+            cc: @slamb2k`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['security', 'automated']
+            });

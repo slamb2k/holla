@@ -1,0 +1,5 @@
+# Product Mission (Lite)
+
+Yubikey PAM Installer is a terminal-based Linux configuration tool that helps security-conscious users and system administrators enhance their system authentication by seamlessly integrating Yubikey U2F hardware tokens with PAM, providing hardware-based two-factor authentication for all system logins while maintaining user-friendly fallback options.
+
+This tool serves Linux system administrators and security-conscious users who need robust hardware-based authentication across all system services. Unlike manual PAM configuration that risks system lockout, Yubikey PAM Installer provides automated, context-aware setup with intelligent fallback mechanisms, ensuring both security and accessibility while adapting authentication prompts to match the user's environment (terminal, GUI, or remote session).

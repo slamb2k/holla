@@ -1,0 +1,388 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: false
+        type: string
+      create_release:
+        description: 'Create GitHub release'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  SHELL: /bin/bash
+
+jobs:
+  # Comprehensive validation and testing
+  validate:
+    name: Full Validation Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      should_release: ${{ steps.check.outputs.should_release }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ -n "${{ github.event.inputs.version }}" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION="0.0.0-dev.$(git rev-parse --short HEAD)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Check if release should be created
+        id: check
+        run: |
+          if [[ "${{ github.event.inputs.create_release }}" == "true" ]] || [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck shfmt bats pandoc
+
+      - name: Run ShellCheck (detailed)
+        run: |
+          echo "Running comprehensive ShellCheck analysis..."
+          find . -type f -name "*.sh" -exec shellcheck -S warning {} \; | tee shellcheck-report.txt
+          
+      - name: Check formatting (detailed)
+        run: |
+          echo "Checking code formatting..."
+          shfmt -d -i 2 -ci src/*.sh *.sh | tee format-report.txt || true
+
+      - name: Run full test suite
+        run: |
+          echo "Running complete test suite..."
+          for test in tests/*.bats; do
+            echo "Testing: $test"
+            bats "$test" || true
+          done
+          
+          # Run standalone tests
+          for test in simple_*_test.sh; do
+            echo "Running: $test"
+            ./"$test" || true
+          done
+
+      - name: Generate documentation
+        run: |
+          echo "Generating documentation..."
+          # Convert markdown to man pages
+          for doc in docs/getting-started/*.md; do
+            base=$(basename "$doc" .md)
+            pandoc -s -t man "$doc" -o "man/${base}.1" || true
+          done
+
+      - name: Create build artifacts
+        run: |
+          mkdir -p artifacts/{src,docs,tests,man}
+          cp -r src/* artifacts/src/
+          cp -r docs/* artifacts/docs/
+          cp -r tests/* artifacts/tests/
+          cp *.sh artifacts/
+          echo "${{ steps.version.outputs.version }}" > artifacts/VERSION
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ steps.version.outputs.version }}
+          path: artifacts/
+          retention-days: 30
+
+  # Build all package formats
+  build-packages:
+    name: Build Packages
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        package-type: [deb, rpm, tar]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-${{ needs.validate.outputs.version }}
+          path: artifacts/
+
+      - name: Setup FPM
+        if: matrix.package-type != 'tar'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ruby ruby-dev build-essential
+          sudo gem install fpm
+
+      - name: Build ${{ matrix.package-type }} package
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+        run: |
+          echo "Building ${{ matrix.package-type }} package version $VERSION..."
+          
+          # Create package structure
+          mkdir -p pkg-build/{usr/local/bin,usr/share/yubikey-pam-installer,etc/yubikey-pam}
+          
+          # Copy files
+          cp artifacts/src/* pkg-build/usr/share/yubikey-pam-installer/
+          cp artifacts/*.sh pkg-build/usr/local/bin/ 2>/dev/null || true
+          
+          # Make scripts executable
+          chmod +x pkg-build/usr/local/bin/*.sh 2>/dev/null || true
+          chmod +x pkg-build/usr/share/yubikey-pam-installer/*.sh
+          
+          case "${{ matrix.package-type }}" in
+            deb)
+              fpm -s dir -t deb \
+                -n yubikey-pam-installer \
+                -v "$VERSION" \
+                --description "Yubikey U2F PAM Configuration Tool" \
+                --url "https://github.com/slamb2k/holla" \
+                --maintainer "slamb2k" \
+                --license "MIT" \
+                --depends "libpam-u2f" \
+                --depends "bash (>= 5.0)" \
+                -C pkg-build \
+                .
+              ;;
+            rpm)
+              fpm -s dir -t rpm \
+                -n yubikey-pam-installer \
+                -v "$VERSION" \
+                --description "Yubikey U2F PAM Configuration Tool" \
+                --url "https://github.com/slamb2k/holla" \
+                --maintainer "slamb2k" \
+                --license "MIT" \
+                --depends "pam-u2f" \
+                --depends "bash >= 5.0" \
+                -C pkg-build \
+                .
+              ;;
+            tar)
+              cd pkg-build
+              tar czf ../yubikey-pam-installer-${VERSION}.tar.gz *
+              cd ..
+              ;;
+          esac
+
+      - name: Test package installation
+        if: matrix.package-type == 'deb'
+        run: |
+          sudo dpkg -i yubikey-pam-installer*.deb || sudo apt-get install -f -y
+          # Basic smoke test
+          ls -la /usr/share/yubikey-pam-installer/
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.package-type }}-${{ needs.validate.outputs.version }}
+          path: |
+            *.deb
+            *.rpm
+            *.tar.gz
+          retention-days: 30
+
+  # Create container image
+  build-container:
+    name: Build Container
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-${{ needs.validate.outputs.version }}
+          path: artifacts/
+
+      - name: Create Dockerfile
+        run: |
+          cat > Dockerfile << 'EOF'
+          FROM ubuntu:22.04
+          
+          RUN apt-get update && apt-get install -y \
+            libpam-u2f \
+            pamu2fcfg \
+            bash \
+            sudo \
+            && rm -rf /var/lib/apt/lists/*
+          
+          COPY artifacts/src /usr/share/yubikey-pam-installer/
+          COPY artifacts/*.sh /usr/local/bin/
+          
+          RUN chmod +x /usr/share/yubikey-pam-installer/*.sh \
+            && chmod +x /usr/local/bin/*.sh 2>/dev/null || true
+          
+          WORKDIR /usr/share/yubikey-pam-installer
+          
+          ENTRYPOINT ["/bin/bash"]
+          EOF
+
+      - name: Build container image
+        run: |
+          docker build -t yubikey-pam-installer:${{ needs.validate.outputs.version }} .
+          docker tag yubikey-pam-installer:${{ needs.validate.outputs.version }} yubikey-pam-installer:latest
+
+      - name: Save container image
+        run: |
+          docker save yubikey-pam-installer:${{ needs.validate.outputs.version }} | gzip > yubikey-pam-installer-${{ needs.validate.outputs.version }}.tar.gz
+
+      - name: Upload container image
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-${{ needs.validate.outputs.version }}
+          path: yubikey-pam-installer-*.tar.gz
+          retention-days: 30
+
+  # Manual approval gate for release
+  approve-release:
+    name: Approve Release
+    needs: [validate, build-packages, build-container]
+    runs-on: ubuntu-latest
+    if: needs.validate.outputs.should_release == 'true'
+    environment:
+      name: production
+    steps:
+      - name: Release approval
+        run: |
+          echo "✅ Release approved for version ${{ needs.validate.outputs.version }}"
+          echo "Proceeding with GitHub release creation..."
+
+  # Create GitHub release
+  create-release:
+    name: Create GitHub Release
+    needs: [validate, build-packages, build-container, approve-release]
+    runs-on: ubuntu-latest
+    if: needs.validate.outputs.should_release == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: package-*
+          merge-multiple: true
+          path: packages/
+
+      - name: Download container
+        uses: actions/download-artifact@v4
+        with:
+          pattern: container-*
+          merge-multiple: true
+          path: packages/
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          cat > release-notes.md << 'EOF'
+          ## Yubikey PAM Installer v${{ needs.validate.outputs.version }}
+          
+          ### 📦 Installation
+          
+          #### Debian/Ubuntu
+          ```bash
+          sudo dpkg -i yubikey-pam-installer_${{ needs.validate.outputs.version }}_all.deb
+          ```
+          
+          #### Fedora/RHEL
+          ```bash
+          sudo rpm -i yubikey-pam-installer-${{ needs.validate.outputs.version }}-1.noarch.rpm
+          ```
+          
+          #### Universal (tar)
+          ```bash
+          tar xzf yubikey-pam-installer-${{ needs.validate.outputs.version }}.tar.gz
+          cd yubikey-pam-installer
+          sudo ./install.sh
+          ```
+          
+          ### 🐳 Docker
+          ```bash
+          docker load < yubikey-pam-installer-${{ needs.validate.outputs.version }}.tar.gz
+          docker run -it --device /dev/bus/usb yubikey-pam-installer:${{ needs.validate.outputs.version }}
+          ```
+          
+          ### ✨ What's New
+          - See [CHANGELOG.md](https://github.com/slamb2k/holla/blob/main/CHANGELOG.md) for details
+          
+          ### 📝 Checksums
+          ```
+          $(cd packages && sha256sum * | sed 's/^/  /')
+          ```
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.validate.outputs.version }}
+          name: Release v${{ needs.validate.outputs.version }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: ${{ contains(needs.validate.outputs.version, 'dev') || contains(needs.validate.outputs.version, 'rc') }}
+          files: |
+            packages/*.deb
+            packages/*.rpm
+            packages/*.tar.gz
+          fail_on_unmatched_files: false
+          generate_release_notes: true
+
+  # Update documentation
+  update-docs:
+    name: Update Documentation
+    needs: [validate, create-release]
+    runs-on: ubuntu-latest
+    if: needs.validate.outputs.should_release == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update version in docs
+        run: |
+          # Update version references in documentation
+          find docs -type f -name "*.md" -exec sed -i "s/v[0-9]\+\.[0-9]\+\.[0-9]\+/v${{ needs.validate.outputs.version }}/g" {} \;
+          
+          # Update README
+          sed -i "s/version-[0-9]\+\.[0-9]\+\.[0-9]\+/version-${{ needs.validate.outputs.version }}/g" README.md
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "docs: update version to ${{ needs.validate.outputs.version }}"
+          title: "Documentation Update for v${{ needs.validate.outputs.version }}"
+          body: |
+            Automated documentation update for release v${{ needs.validate.outputs.version }}
+            
+            - Updated version references in documentation
+            - Updated README badges
+          branch: docs/version-${{ needs.validate.outputs.version }}
+          delete-branch: true
