@@ -1,0 +1,16 @@
+# Ignore agent-os documentation (has its own standards)
+.agent-os/
+
+# Ignore claude configuration
+.claude/
+
+# Ignore node modules
+node_modules/
+
+# Ignore git
+.git/
+
+# Ignore build outputs
+build/
+dist/
+output/

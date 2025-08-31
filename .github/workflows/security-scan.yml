@@ -28,7 +28,14 @@ jobs:
         with:
           check_together: 'yes'
           severity: 'style'  # Check all severity levels
-          scandir: '.'
+          scandir: './src'
+          additional_files: '*.sh scripts/*.sh'
+          ignore_paths: |
+            .agent-os
+            .claude
+            .git
+            node_modules
+            .venv
           format: 'json'
         continue-on-error: true
 
@@ -43,22 +50,22 @@ jobs:
           # Check for dangerous patterns
           echo "### Dangerous Patterns Check" >> $GITHUB_STEP_SUMMARY
           
-          # Check for eval usage
-          if grep -r "eval " --include="*.sh" .; then
+          # Check for eval usage (excluding .agent-os and .claude)
+          if grep -r "eval " --include="*.sh" --exclude-dir=".agent-os" --exclude-dir=".claude" --exclude-dir=".git" .; then
             echo "⚠️ Found 'eval' usage - potential code injection risk" >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ No 'eval' usage found" >> $GITHUB_STEP_SUMMARY
           fi
           
-          # Check for unquoted variables
-          if grep -r '\$[A-Za-z_][A-Za-z0-9_]*[^"]' --include="*.sh" . | grep -v '^\s*#'; then
+          # Check for unquoted variables (excluding .agent-os and .claude)
+          if grep -r '\$[A-Za-z_][A-Za-z0-9_]*[^"]' --include="*.sh" --exclude-dir=".agent-os" --exclude-dir=".claude" --exclude-dir=".git" . | grep -v '^\s*#'; then
             echo "⚠️ Found unquoted variables - potential injection risk" >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ Variables appear to be properly quoted" >> $GITHUB_STEP_SUMMARY
           fi
           
-          # Check for hardcoded credentials
-          if grep -rE "(password|passwd|pwd|secret|api_key|apikey|token)[ ]*=[ ]*['\"]" --include="*.sh" .; then
+          # Check for hardcoded credentials (excluding .agent-os and .claude)
+          if grep -rE "(password|passwd|pwd|secret|api_key|apikey|token)[ ]*=[ ]*['\"]" --include="*.sh" --exclude-dir=".agent-os" --exclude-dir=".claude" --exclude-dir=".git" .; then
             echo "⚠️ Potential hardcoded credentials found" >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ No hardcoded credentials detected" >> $GITHUB_STEP_SUMMARY

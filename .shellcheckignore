@@ -1,0 +1,18 @@
+# Ignore agent-os and claude directories
+.agent-os/**
+.claude/**
+
+# Ignore git and version control
+.git/**
+
+# Ignore node modules if present
+node_modules/**
+
+# Ignore Python virtual environments
+.venv/**
+venv/**
+
+# Ignore build and output directories
+build/**
+dist/**
+output/**

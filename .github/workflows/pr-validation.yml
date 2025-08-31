@@ -28,7 +28,13 @@ jobs:
           check_together: 'yes'
           severity: 'warning'
           scandir: './src'
-          additional_files: '*.sh demo_*.sh simple_*.sh'
+          additional_files: '*.sh'
+          ignore_paths: |
+            .agent-os
+            .claude
+            .git
+            node_modules
+            .venv
 
   # Format check - fails fast
   format-check:
@@ -46,9 +52,10 @@ jobs:
       - name: Check shell script formatting
         run: |
           echo "Checking shell script formatting..."
-          shfmt -d -i 2 -ci src/*.sh *.sh
+          # Only check our actual source files, not generated or third-party code
+          shfmt -d -i 2 -ci src/*.sh *.sh scripts/*.sh
           if [ $? -ne 0 ]; then
-            echo "::error::Shell scripts are not properly formatted. Run 'shfmt -i 2 -w src/*.sh *.sh' to fix."
+            echo "::error::Shell scripts are not properly formatted. Run 'shfmt -i 2 -w src/*.sh *.sh scripts/*.sh' to fix."
             exit 1
           fi
 
@@ -91,9 +98,13 @@ jobs:
         uses: DavidAnson/markdownlint-cli2-action@v16
         with:
           globs: |
-            **/*.md
+            README.md
+            CHANGELOG.md
+            docs/**/*.md
             !node_modules
             !.agent-os
+            !.claude
+            !.git
 
   # Unit tests - fast isolated tests
   unit-tests:
