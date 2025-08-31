@@ -101,8 +101,14 @@ validate_pam_syntax() {
   local parsed_output
   parsed_output=$(parse_pam_line "$line")
 
-  if [[ "$parsed_output" =~ Error: ]]; then
-    echo "$parsed_output"  # Pass through the actual error message
+  if [[ "$parsed_output" =~ error: ]]; then
+    # For "auth required" without module path, parse_pam_line returns "error:Failed to parse line"
+    # But we need to be more specific about what's missing
+    if [[ "$line" =~ ^[^[:space:]]+[[:space:]]+[^[:space:]]+$ ]]; then
+      echo "Error: Missing module path"
+    else
+      echo "Error: Failed to parse line"
+    fi
     return 1
   fi
 
