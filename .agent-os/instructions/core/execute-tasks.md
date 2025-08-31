@@ -11,6 +11,7 @@ encoding: UTF-8
 ## Overview
 
 Execute tasks for a given spec following three distinct phases:
+
 1. Pre-execution setup (Steps 1-3)
 2. Task execution loop (Step 4)
 3. Post-execution tasks (Step 5)
@@ -57,7 +58,6 @@ Use the context-fetcher subagent to gather minimal context for task understandin
     - REQUEST: "Get technical approach from technical-spec.md"
   PROCESS: Returned information
 </instructions>
-
 
 <context_gathering>
   <essential_docs>

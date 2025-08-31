@@ -5,6 +5,7 @@ This guide covers automated deployment workflows and CI/CD integration for the Y
 ## Overview
 
 The project includes comprehensive automation for:
+
 - Testing across multiple environments
 - Package building and distribution
 - Release management
@@ -72,6 +73,7 @@ Triggered on pull requests to `main` or `develop`:
 ```
 
 **Matrix Testing:**
+
 - Ubuntu 20.04, 22.04, 24.04
 - Bash 5.0+ compatibility
 - PAM dependency verification
@@ -106,7 +108,7 @@ Automated on pushes to `main` and version tags:
 ```
 main
 ├── feat/feature-name       # Feature branches
-├── fix/bug-description     # Bug fixes  
+├── fix/bug-description     # Bug fixes
 ├── hotfix/critical-fix     # Emergency fixes
 └── develop                 # Integration branch
 ```
@@ -116,6 +118,7 @@ main
 ### Test Levels
 
 #### 1. Unit Tests
+
 - Individual component testing
 - Mock PAM environment
 - Isolated function validation
@@ -130,6 +133,7 @@ make test
 ```
 
 #### 2. Integration Tests
+
 - Component interaction testing
 - Real PAM parsing (safe mode)
 - Backup/restore workflows
@@ -143,6 +147,7 @@ make test
 ```
 
 #### 3. Container Tests
+
 - Clean environment testing
 - Multi-distribution validation
 - Package installation testing
@@ -155,6 +160,7 @@ make docker-compose-test
 ```
 
 #### 4. End-to-End Tests
+
 - Full system integration
 - Real hardware authentication
 - Production scenario simulation
@@ -163,6 +169,7 @@ make docker-compose-test
 ### Test Data Management
 
 #### Mock Data Structure
+
 ```
 tests/fixtures/
 ├── pam.d/                  # Sample PAM configs
@@ -192,11 +199,13 @@ tests/fixtures/
 ### Versioning Strategy
 
 **Semantic Versioning (SemVer):**
+
 - `MAJOR.MINOR.PATCH`
 - Pre-release: `1.0.0-alpha.1`
 - Build metadata: `1.0.0+20240829.abc123`
 
 **Version Bumping:**
+
 ```bash
 # Automated version bump
 make release-patch   # 1.0.0 → 1.0.1
@@ -207,6 +216,7 @@ make release-major   # 1.0.0 → 2.0.0
 ### Package Distribution
 
 #### Direct Distribution
+
 ```bash
 # GitHub Releases
 gh release create v1.0.0 dist/*
@@ -219,12 +229,13 @@ curl -X POST -H "Authorization: token $TOKEN" \
 ```
 
 #### Repository Distribution
+
 ```bash
 # APT repository
 ./deploy.sh build
 ./scripts/create-apt-repo.sh dist/*.deb
 
-# YUM repository  
+# YUM repository
 ./scripts/create-yum-repo.sh dist/*.rpm
 
 # AUR package
@@ -236,6 +247,7 @@ curl -X POST -H "Authorization: token $TOKEN" \
 ### Staging Environment
 
 **Docker-based staging:**
+
 ```bash
 # Start staging environment
 docker-compose -f docker-compose.staging.yml up -d
@@ -253,6 +265,7 @@ docker-compose -f docker-compose.staging.yml down --volumes
 ### Production Considerations
 
 #### Pre-deployment Checklist
+
 - [ ] All tests passing
 - [ ] Documentation updated
 - [ ] CHANGELOG.md updated
@@ -261,13 +274,14 @@ docker-compose -f docker-compose.staging.yml down --volumes
 - [ ] Backup procedures tested
 
 #### Rollback Procedures
+
 ```bash
 # Git rollback
 git tag -d v1.0.1
 git push origin :refs/tags/v1.0.1
 git revert HEAD~1
 
-# Package rollback  
+# Package rollback
 sudo apt-get install yubikey-pam-installer=1.0.0-1
 
 # Emergency PAM restore
@@ -279,11 +293,13 @@ sudo cp -r /etc/pam.d.backup-20240829/* /etc/pam.d/
 ### Build Health Monitoring
 
 #### GitHub Actions Status
+
 - Workflow success/failure notifications
 - Performance regression detection
 - Test coverage tracking
 
 #### Package Quality Metrics
+
 - Linting score trends
 - Test coverage percentage
 - Security vulnerability count
@@ -292,12 +308,14 @@ sudo cp -r /etc/pam.d.backup-20240829/* /etc/pam.d/
 ### Deployment Metrics
 
 #### Success Indicators
+
 - Package installation success rate
 - PAM configuration success rate
 - User registration success rate
 - Authentication success rate
 
 #### Alert Triggers
+
 - Build failure > 2 consecutive times
 - Test coverage drop > 5%
 - Security vulnerability detection
@@ -308,6 +326,7 @@ sudo cp -r /etc/pam.d.backup-20240829/* /etc/pam.d/
 ### Secure Deployment Pipeline
 
 #### Code Signing
+
 ```bash
 # Sign packages
 gpg --detach-sign --armor package.deb
@@ -318,6 +337,7 @@ gpg --verify package.deb.asc package.deb
 ```
 
 #### Secret Management
+
 ```bash
 # GitHub Secrets
 GITHUB_TOKEN          # For releases
@@ -330,6 +350,7 @@ export GITHUB_REPOSITORY=user/repo
 ```
 
 #### Supply Chain Security
+
 - Dependency scanning with Trivy
 - Container image scanning
 - SBOM (Software Bill of Materials) generation
@@ -340,6 +361,7 @@ export GITHUB_REPOSITORY=user/repo
 ### Common Issues
 
 #### Build Failures
+
 ```bash
 # Debug build environment
 ./deploy.sh check
@@ -352,6 +374,7 @@ VERBOSE=1 make package
 ```
 
 #### Test Failures
+
 ```bash
 # Run specific test
 ./simple_backup_test.sh
@@ -364,6 +387,7 @@ which bats shellcheck shfmt
 ```
 
 #### Deployment Issues
+
 ```bash
 # Check staging environment
 docker ps
@@ -377,8 +401,8 @@ rpm -qpi package.rpm
 ### Support Channels
 
 - **Issues:** GitHub Issues
-- **Discussions:** GitHub Discussions  
-- **Security:** security@project.org
+- **Discussions:** GitHub Discussions
+- **Security:** <security@project.org>
 - **Documentation:** /docs/ directory
 
 ## Future Enhancements
@@ -386,18 +410,21 @@ rpm -qpi package.rpm
 ### Planned Automation Features
 
 #### Advanced Testing
+
 - Hardware-in-the-loop testing
 - Performance benchmarking
 - Chaos engineering integration
 - User acceptance testing automation
 
 #### Enhanced Deployment
+
 - Blue-green deployments
 - Canary releases
 - Automatic rollback triggers
 - Multi-region deployment
 
 #### Monitoring Integration
+
 - Prometheus metrics
 - Grafana dashboards
 - Log aggregation

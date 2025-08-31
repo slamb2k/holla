@@ -7,17 +7,20 @@ Detailed requirements and preparation steps before installing Yubikey PAM Instal
 ### Yubikey Compatibility
 
 #### Supported Models
+
 - ✅ **Yubikey 5 Series** (5, 5C, 5Ci, 5 NFC, 5C NFC, 5 Nano)
 - ✅ **Yubikey 4 Series** (4, 4C, 4 Nano)
 - ✅ **Yubikey Security Key Series**
 - ✅ **Yubikey FIPS Series** (4 FIPS, 5 FIPS)
 
 #### Required Features
+
 - **U2F Support**: All listed models support U2F
 - **Touch Sensor**: Required for authentication confirmation
 - **LED Indicator**: Visual feedback during operations
 
 ### System Hardware
+
 - **USB Port**: USB-A or USB-C depending on Yubikey model
 - **Multiple Ports**: Recommended for backup key registration
 
@@ -53,6 +56,7 @@ systemctl --version
 #### Package Installation by Distribution
 
 **Ubuntu/Debian**:
+
 ```bash
 sudo apt-get update
 sudo apt-get install -y \
@@ -63,6 +67,7 @@ sudo apt-get install -y \
 ```
 
 **Fedora/RHEL/CentOS**:
+
 ```bash
 sudo dnf install -y \
   pam-u2f \
@@ -72,6 +77,7 @@ sudo dnf install -y \
 ```
 
 **Arch Linux**:
+
 ```bash
 sudo pacman -Sy \
   pam-u2f \
@@ -79,6 +85,7 @@ sudo pacman -Sy \
 ```
 
 **openSUSE**:
+
 ```bash
 sudo zypper install -y \
   pam_u2f \
@@ -107,10 +114,12 @@ sudo gem install fpm  # Requires Ruby
 ### User Permissions
 
 #### Required Access
+
 - **sudo/root**: Required for PAM configuration
 - **USB Device Access**: User must be in `plugdev` group
 
 #### Setting Up Permissions
+
 ```bash
 # Add user to plugdev group (for USB access)
 sudo usermod -a -G plugdev $USER
@@ -140,6 +149,7 @@ lsusb | grep Yubico
 ### Before Installation
 
 #### 1. System Backup
+
 ```bash
 # Backup critical system files
 sudo cp -r /etc/pam.d /etc/pam.d.backup-$(date +%Y%m%d)
@@ -147,6 +157,7 @@ sudo cp /etc/sudoers /etc/sudoers.backup-$(date +%Y%m%d)
 ```
 
 #### 2. Emergency Access
+
 ```bash
 # Keep a root shell open during installation
 sudo -s
@@ -154,6 +165,7 @@ sudo -s
 ```
 
 #### 3. Recovery Media
+
 - Have a Linux Live USB ready
 - Know how to boot to recovery mode
 - Document your partition layout: `lsblk`
@@ -163,11 +175,13 @@ sudo -s
 **IMPORTANT**: Always register at least 2 Yubikeys
 
 #### Why Multiple Keys?
+
 - Primary key loss/damage protection
 - Travel backup (leave one in safe location)
 - Emergency access guarantee
 
 #### Registering Backup Keys
+
 ```bash
 # Register first key
 ./src/u2f_registration.sh
@@ -180,11 +194,13 @@ sudo -s
 ## Network Requirements
 
 ### Online Operations
+
 - **Package Installation**: Internet required
 - **Yubikey Registration**: Offline capable
 - **Updates**: Internet recommended
 
 ### Proxy Considerations
+
 ```bash
 # If behind proxy, set environment
 export http_proxy=http://proxy.example.com:8080
@@ -196,6 +212,7 @@ export https_proxy=http://proxy.example.com:8080
 ### Recommended Test Setup
 
 #### Option 1: Virtual Machine
+
 ```bash
 # Create test VM with same OS
 # Snapshot before installation
@@ -203,6 +220,7 @@ export https_proxy=http://proxy.example.com:8080
 ```
 
 #### Option 2: Docker Container
+
 ```bash
 # Test basic functionality
 docker run -it --privileged \
@@ -211,6 +229,7 @@ docker run -it --privileged \
 ```
 
 #### Option 3: Spare System
+
 - Use non-critical system
 - Full backup before testing
 - Document all changes
@@ -231,6 +250,7 @@ Before proceeding with installation:
 ## Common Pre-Installation Issues
 
 ### Yubikey Not Detected
+
 ```bash
 # Check USB connection
 dmesg | tail -20
@@ -241,6 +261,7 @@ sudo modprobe uhci_hcd
 ```
 
 ### Package Conflicts
+
 ```bash
 # Remove conflicting packages
 sudo apt-get remove yubikey-personalization  # If conflicts
@@ -251,6 +272,7 @@ sudo apt-get update
 ```
 
 ### Permission Issues
+
 ```bash
 # Fix USB permissions
 sudo chmod 666 /dev/bus/usb/*/*

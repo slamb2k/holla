@@ -7,7 +7,6 @@ source src/backup_system.sh
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Test counters
@@ -32,9 +31,9 @@ run_test() {
   local test_name="$1"
   local expected="$2"
   local actual="$3"
-  
+
   ((TESTS_RUN++))
-  
+
   if [[ "$actual" == *"$expected"* ]]; then
     echo -e "${GREEN}✓${NC} $test_name"
     ((TESTS_PASSED++))
@@ -50,13 +49,13 @@ run_test() {
 setup_test_env() {
   mkdir -p "$TEST_PAM_DIR"
   mkdir -p "$TEST_BACKUP_BASE"
-  
+
   # Create mock PAM files
-  echo "auth required pam_unix.so" > "$TEST_PAM_DIR/sudo"
-  echo "auth required pam_unix.so" > "$TEST_PAM_DIR/su"
-  echo "@include common-auth" > "$TEST_PAM_DIR/login"
-  echo "account required pam_unix.so" > "$TEST_PAM_DIR/common-account"
-  
+  echo "auth required pam_unix.so" >"$TEST_PAM_DIR/sudo"
+  echo "auth required pam_unix.so" >"$TEST_PAM_DIR/su"
+  echo "@include common-auth" >"$TEST_PAM_DIR/login"
+  echo "account required pam_unix.so" >"$TEST_PAM_DIR/common-account"
+
   # Set permissions
   chmod 644 "$TEST_PAM_DIR"/*
 }
@@ -106,14 +105,14 @@ run_test "Preserves file permissions" "600" "$backup_perms"
 # Test 4: Backup verification
 echo ""
 echo "Testing backup verification..."
-chmod 644 "$TEST_PAM_DIR/sudo"  # Reset permissions
+chmod 644 "$TEST_PAM_DIR/sudo" # Reset permissions
 backup_dir=$(create_backup_directory "$TEST_BACKUP_BASE")
 backup_pam_config "$TEST_PAM_DIR" "$backup_dir" >/dev/null 2>&1
 verify_result=$(verify_backup "$TEST_PAM_DIR" "$backup_dir" 2>&1)
 run_test "Verify identical backup" "verified successfully" "$verify_result"
 
 # Modify and test difference detection
-echo "modified" >> "$TEST_PAM_DIR/sudo"
+echo "modified" >>"$TEST_PAM_DIR/sudo"
 verify_backup "$TEST_PAM_DIR" "$backup_dir" >/dev/null 2>&1 && diff_result="no_diff" || diff_result="diff_found"
 run_test "Detect backup differences" "diff_found" "$diff_result"
 
@@ -139,12 +138,12 @@ run_test "Log includes timestamp" "has_timestamp" "$timestamp_result"
 # Test 6: Restore functionality
 echo ""
 echo "Testing restore functionality..."
-setup_test_env  # Reset environment
+setup_test_env # Reset environment
 backup_dir=$(create_backup_directory "$TEST_BACKUP_BASE")
 backup_pam_config "$TEST_PAM_DIR" "$backup_dir" >/dev/null 2>&1
 
 # Modify original files
-echo "modified content" > "$TEST_PAM_DIR/sudo"
+echo "modified content" >"$TEST_PAM_DIR/sudo"
 
 # Restore from backup
 restore_from_backup "$backup_dir" "$TEST_PAM_DIR" >/dev/null 2>&1

@@ -1,6 +1,7 @@
 # Test and development Dockerfile for Yubikey PAM Installer
 # This provides a clean environment for testing PAM integration
-FROM ubuntu:22.04
+ARG BASE_IMAGE=ubuntu:22.04
+FROM ${BASE_IMAGE}
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -14,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     shellcheck \
+    make \
     && rm -rf /var/lib/apt/lists/*
 
 # Create test user

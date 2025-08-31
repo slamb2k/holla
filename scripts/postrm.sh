@@ -18,16 +18,16 @@ rm -f /usr/local/bin/yubikey-backup
 # Handle purge vs remove
 if [ "$1" = "purge" ]; then
   echo "Purging configuration and logs..."
-  
+
   # Remove logs
   rm -rf /var/log/yubikey-pam
-  
+
   # Remove configuration directory (but preserve backups)
   if [ -d /etc/yubikey-pam ]; then
     # Save backup directory if it exists
     if [ -d /etc/yubikey-pam/backup ]; then
       echo -e "${YELLOW}Preserving /etc/yubikey-pam/backup for safety${NC}"
-      mv /etc/yubikey-pam/backup /tmp/yubikey-pam-backup-$(date +%Y%m%d-%H%M%S)
+      mv /etc/yubikey-pam/backup "/tmp/yubikey-pam-backup-$(date +%Y%m%d-%H%M%S)"
       echo "Backups moved to /tmp/"
     fi
     rm -rf /etc/yubikey-pam

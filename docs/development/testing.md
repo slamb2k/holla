@@ -89,7 +89,6 @@ Interactive testing:
 setup() {
   # Source the module to test
   source "${BATS_TEST_DIRNAME}/../src/module.sh"
-  
   # Create test environment
   TEST_DIR=$(mktemp -d)
   export TEST_DIR
@@ -106,10 +105,8 @@ teardown() {
   # Arrange
   local input="test data"
   local expected="expected output"
-  
   # Act
   run function_to_test "$input"
-  
   # Assert
   [ "$status" -eq 0 ]
   [[ "$output" =~ "$expected" ]]
@@ -119,6 +116,7 @@ teardown() {
 ### Test Best Practices
 
 #### 1. Test Naming
+
 ```bash
 # Good test names
 @test "parse valid PAM auth line with multiple arguments" { }
@@ -131,6 +129,7 @@ teardown() {
 ```
 
 #### 2. Assertions
+
 ```bash
 # Check exit status
 [ "$status" -eq 0 ]      # Success
@@ -153,12 +152,12 @@ teardown() {
 ```
 
 #### 3. Test Isolation
+
 ```bash
 setup() {
   # Create isolated environment
   TEST_DIR=$(mktemp -d)
   TEST_HOME="$TEST_DIR/home"
-  
   # Override environment
   export HOME="$TEST_HOME"
   export PATH="$TEST_DIR/bin:$PATH"
@@ -167,7 +166,6 @@ setup() {
 teardown() {
   # Restore environment
   export HOME="$ORIGINAL_HOME"
-  
   # Cleanup
   rm -rf "$TEST_DIR"
 }
@@ -197,15 +195,12 @@ Test component interactions:
   run create_backup_directory "$TEST_DIR"
   [ "$status" -eq 0 ]
   backup_dir="$output"
-  
   # Backup files
   run backup_pam_config "$SOURCE" "$backup_dir"
   [ "$status" -eq 0 ]
-  
   # Verify backup
   run verify_backup "$SOURCE" "$backup_dir"
   [ "$status" -eq 0 ]
-  
   # Restore
   run restore_from_backup "$backup_dir" "$TARGET"
   [ "$status" -eq 0 ]
@@ -282,22 +277,17 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    
-    steps:
+      steps:
     - uses: actions/checkout@v2
-    
-    - name: Install dependencies
+      - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y bats shellcheck libpam-u2f
-    
-    - name: Run shellcheck
+      - name: Run shellcheck
       run: shellcheck src/*.sh
-    
-    - name: Run tests
+      - name: Run tests
       run: bats tests/*.bats
-    
-    - name: Run standalone tests
+      - name: Run standalone tests
       run: |
         ./simple_test.sh
         ./simple_backup_test.sh
@@ -354,10 +344,8 @@ bats tests/test_file.bats --show-output-of-passing-tests
 @test "debug example" {
   # Print variables
   echo "Variable: $var" >&3
-  
   # Pause for inspection
   read -p "Press enter to continue..." >&3
-  
   # Check state
   ls -la "$TEST_DIR" >&3
 }
@@ -366,6 +354,7 @@ bats tests/test_file.bats --show-output-of-passing-tests
 ### Common Test Issues
 
 #### Permission Errors
+
 ```bash
 # Fix in setup()
 chmod 600 "$TEST_FILE"
@@ -373,6 +362,7 @@ chmod 700 "$TEST_DIR"
 ```
 
 #### Race Conditions
+
 ```bash
 # Add sleep for timing issues
 sleep 0.1
@@ -393,6 +383,7 @@ retry() {
 ```
 
 #### Environment Pollution
+
 ```bash
 # Save and restore environment
 setup() {
@@ -416,13 +407,10 @@ teardown() {
   for i in {1..1000}; do
     echo "auth required pam_unix.so" >> "$TEST_FILE"
   done
-  
   # Time the operation
   run time parse_pam_file "$TEST_FILE"
-  
   # Check completed within timeout
   [ "$status" -eq 0 ]
-  
   # Could also check actual time if needed
   # [[ "$output" =~ "real.*0m0" ]]  # Under 1 second
 }

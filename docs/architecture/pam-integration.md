@@ -49,12 +49,14 @@ auth    required    pam_unix.so nullok try_first_pass
 ```
 
 #### Module Types
+
 - **auth**: Authentication (verify identity)
 - **account**: Account validation (is account valid?)
 - **password**: Password management
 - **session**: Session setup/cleanup
 
 #### Control Flags
+
 - **required**: Must succeed, continue stack
 - **requisite**: Must succeed, fail immediately if not
 - **sufficient**: Success is enough, skip rest
@@ -133,6 +135,7 @@ username:credential:key_handle[:credential2:key_handle2...]
 ```
 
 Example:
+
 ```
 john:BJkQhw...xyz:r6sWwB...123:AnotherCred:AnotherHandle
 ```
@@ -283,6 +286,7 @@ tail -f /var/log/auth.log
 ### Common Issues
 
 #### Module Not Found
+
 ```bash
 # Check module exists
 ls /lib/*/security/pam_u2f.so
@@ -292,12 +296,14 @@ sudo apt-get install libpam-u2f
 ```
 
 #### Wrong Module Order
+
 ```bash
 # Symptoms: Yubikey ignored
 # Fix: Ensure pam_u2f before pam_unix
 ```
 
 #### Permission Denied
+
 ```bash
 # Check key file permissions
 ls -la ~/.config/Yubico/u2f_keys

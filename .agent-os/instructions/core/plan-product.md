@@ -35,6 +35,7 @@ Use the context-fetcher subagent to collect all required inputs from the user in
 
 <error_template>
   Please provide the following missing information:
+
   1. Main idea for the product
   2. List of key features (minimum 3)
   3. Target users and use cases (minimum 1)
@@ -186,19 +187,20 @@ Use the file-creator subagent to create the file: .agent-os/product/tech-stack.m
 </file_template>
 
 <required_items>
-  - application_framework: string + version
-  - database_system: string
-  - javascript_framework: string
-  - import_strategy: ["importmaps", "node"]
-  - css_framework: string + version
-  - ui_component_library: string
-  - fonts_provider: string
-  - icon_library: string
-  - application_hosting: string
-  - database_hosting: string
-  - asset_hosting: string
-  - deployment_solution: string
-  - code_repository_url: string
+
+- application_framework: string + version
+- database_system: string
+- javascript_framework: string
+- import_strategy: ["importmaps", "node"]
+- css_framework: string + version
+- ui_component_library: string
+- fonts_provider: string
+- icon_library: string
+- application_hosting: string
+- database_hosting: string
+- asset_hosting: string
+- deployment_solution: string
+- code_repository_url: string
 </required_items>
 
 <data_resolution>
@@ -229,7 +231,6 @@ Use the file-creator subagent to create the file: .agent-os/product/tech-stack.m
 
   You can respond with the technology choice or "n/a" for each item.
 </missing_items_template>
-
 
 </step>
 
@@ -305,19 +306,21 @@ Use the file-creator subagent to create the following file: .agent-os/product/ro
 </phase_structure>
 
 <phase_guidelines>
-  - Phase 1: Core MVP functionality
-  - Phase 2: Key differentiators
-  - Phase 3: Scale and polish
-  - Phase 4: Advanced features
-  - Phase 5: Enterprise features
+
+- Phase 1: Core MVP functionality
+- Phase 2: Key differentiators
+- Phase 3: Scale and polish
+- Phase 4: Advanced features
+- Phase 5: Enterprise features
 </phase_guidelines>
 
 <effort_scale>
-  - XS: 1 day
-  - S: 2-3 days
-  - M: 1 week
-  - L: 2 weeks
-  - XL: 3+ weeks
+
+- XS: 1 day
+- S: 2-3 days
+- M: 1 week
+- L: 2 weeks
+- XL: 3+ weeks
 </effort_scale>
 
 </step>

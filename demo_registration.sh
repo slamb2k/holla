@@ -32,16 +32,17 @@ setup_demo() {
 mock_pamu2fcfg() {
   local user="$1"
   local existing="$2"
-  
+
   # Simulate touch delay
   echo "Waiting for touch..."
   sleep 2
-  
+
   # Generate mock credential data
-  local timestamp=$(date +%s)
+  local timestamp
+  timestamp=$(date +%s)
   local mock_cred="MockCredential_${timestamp}"
   local mock_handle="MockHandle_${timestamp}"
-  
+
   if [[ -n "$existing" ]]; then
     # Additional key format (without username prefix)
     echo "${mock_cred}:${mock_handle}"
@@ -49,7 +50,7 @@ mock_pamu2fcfg() {
     # First key format
     echo "${user}:${mock_cred}:${mock_handle}"
   fi
-  
+
   return 0
 }
 
@@ -197,7 +198,7 @@ cat "$DEMO_U2F_KEYS_FILE" | while IFS=: read -r user rest; do
       done
     fi
     break
-  done <<< "$rest"
+  done <<<"$rest"
 done
 echo ""
 

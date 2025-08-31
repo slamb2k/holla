@@ -29,20 +29,20 @@ sudo apt-get install -y \
 ### Repository Setup
 
 1. **Fork and Clone**:
+
    ```bash
    # Fork on GitHub first, then:
    git clone https://github.com/YOUR_USERNAME/yubikey-pam-installer.git
    cd yubikey-pam-installer
-   
    # Add upstream remote
    git remote add upstream https://github.com/[org]/yubikey-pam-installer.git
    ```
 
 2. **Branch Setup**:
+
    ```bash
    # Create feature branch
    git checkout -b feature/your-feature-name
-   
    # Keep main branch clean
    git checkout main
    git pull upstream main
@@ -75,6 +75,7 @@ yubikey-pam-installer/
 ### 1. Code Style
 
 #### Shell Script Standards
+
 ```bash
 # Check syntax with shellcheck
 shellcheck src/*.sh
@@ -89,6 +90,7 @@ lower_case_variables
 ```
 
 #### Best Practices
+
 - Always quote variables: `"$variable"`
 - Use `[[ ]]` instead of `[ ]` for conditionals
 - Check exit codes: `command || handle_error`
@@ -119,6 +121,7 @@ bats tests/test_pam_parser.bats
 #### Writing Tests
 
 Example test structure:
+
 ```bash
 #!/usr/bin/env bats
 
@@ -136,10 +139,8 @@ teardown() {
 @test "description of test" {
   # Arrange
   input="test input"
-  
   # Act
   run function_to_test "$input"
-  
   # Assert
   [ "$status" -eq 0 ]
   [[ "$output" =~ "expected" ]]
@@ -149,6 +150,7 @@ teardown() {
 ### 3. Debugging
 
 #### Debug Mode
+
 ```bash
 # Enable debug output
 set -x  # Print commands
@@ -159,6 +161,7 @@ bash -x src/script.sh
 ```
 
 #### Logging
+
 ```bash
 # Add debug logging
 debug_log() {
@@ -195,6 +198,7 @@ RUN chmod +x src/*.sh
 ```
 
 Build and test:
+
 ```bash
 # Build test container
 docker build -f Dockerfile.test -t yubikey-test .
@@ -230,6 +234,7 @@ chmod +x pamu2fcfg
 ### Commit Messages
 
 Follow conventional commits:
+
 ```
 type(scope): description
 
@@ -239,6 +244,7 @@ type(scope): description
 ```
 
 Types:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation
@@ -247,6 +253,7 @@ Types:
 - `chore`: Maintenance
 
 Example:
+
 ```bash
 git commit -m "feat(registration): add multi-key support
 
@@ -260,14 +267,13 @@ Closes #123"
 ### Pull Request Process
 
 1. **Before PR**:
+
    ```bash
    # Update from upstream
    git fetch upstream
    git rebase upstream/main
-   
    # Run tests
    bats tests/*.bats
-   
    # Check code quality
    shellcheck src/*.sh
    ```
@@ -283,6 +289,7 @@ Closes #123"
 ### 1. PAM Safety
 
 Always test PAM changes in isolation:
+
 ```bash
 # Create test PAM service
 sudo cp /etc/pam.d/sudo /etc/pam.d/test-yubikey
@@ -294,6 +301,7 @@ sudo pamtester test-yubikey $USER authenticate
 ### 2. Quick Iteration
 
 Use the demo scripts for rapid testing:
+
 ```bash
 # Modify source
 vim src/pam_parser.sh
@@ -305,6 +313,7 @@ vim src/pam_parser.sh
 ### 3. Documentation
 
 Update docs alongside code:
+
 ```bash
 # Check for outdated docs
 grep -r "function_name" docs/
@@ -317,6 +326,7 @@ grip docs/development/local-setup.md
 ## Troubleshooting Development Issues
 
 ### Permission Errors
+
 ```bash
 # Fix script permissions
 chmod +x src/*.sh *.sh
@@ -326,6 +336,7 @@ chmod +x tests/*.bats
 ```
 
 ### Test Failures
+
 ```bash
 # Run with verbose output
 bats --verbose tests/test_file.bats
@@ -335,6 +346,7 @@ bash -x tests/test_file.bats
 ```
 
 ### Shellcheck Warnings
+
 ```bash
 # Ignore specific warning
 # shellcheck disable=SC2034

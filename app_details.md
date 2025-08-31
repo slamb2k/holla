@@ -25,9 +25,8 @@ Whenever a login is required:
     - Return to the terminal that requested the authentication once completed and display the result of the authentication.
     - Write to the terminal the result of the authentication.
 
-
-
 #### Terminal (CLI) within Terminal Emulator
+
     - Write to terminal that the user should touch the yubikey to authenticate or hit enter to use password authentication.
     - If the yubikey auth fails 3 timesor the user submits no password, they should fallback to password authentication.
     - Once complete, write to the terminal the result of the authentication.
@@ -38,6 +37,3 @@ Whenever a login is required:
 - Allow Yubikey to to be used to authenticate in this dialog.
 - If the yubikey auth fails 3 times or the user submits no password, the terminal should display a message to the user that password authentication is required and reopen the window for the password to be entered.
 - Once complete, return to the app that requested the authentication and display the result of the authentication.
-
-
-

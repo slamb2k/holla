@@ -127,9 +127,10 @@ Use kebab-case for spec name. Maximum 5 words in name.
 </folder_naming>
 
 <example_names>
-  - 2025-03-15-password-reset-flow
-  - 2025-03-16-user-profile-dashboard
-  - 2025-03-17-api-rate-limiting
+
+- 2025-03-15-password-reset-flow
+- 2025-03-16-user-profile-dashboard
+- 2025-03-17-api-rate-limiting
 </example_names>
 
 </step>
@@ -287,16 +288,18 @@ Use the file-creator subagent to create the file: sub-specs/technical-spec.md us
 </spec_sections>
 
 <example_template>
-  ## Technical Requirements
 
-  - [SPECIFIC_TECHNICAL_REQUIREMENT]
-  - [SPECIFIC_TECHNICAL_REQUIREMENT]
+## Technical Requirements
 
-  ## External Dependencies (Conditional)
+- [SPECIFIC_TECHNICAL_REQUIREMENT]
+- [SPECIFIC_TECHNICAL_REQUIREMENT]
+
+## External Dependencies (Conditional)
 
   [ONLY_IF_NEW_DEPENDENCIES_NEEDED]
-  - **[LIBRARY_NAME]** - [PURPOSE]
-  - **Justification:** [REASON_FOR_INCLUSION]
+
+- **[LIBRARY_NAME]** - [PURPOSE]
+- **Justification:** [REASON_FOR_INCLUSION]
 </example_template>
 
 <conditional_logic>
@@ -390,9 +393,10 @@ Use the file-creator subagent to create file: sub-specs/api-spec.md ONLY IF API 
 </api_sections>
 
 <endpoint_template>
-  ## Endpoints
 
-  ### [HTTP_METHOD] [ENDPOINT_PATH]
+## Endpoints
+
+### [HTTP_METHOD] [ENDPOINT_PATH]
 
   **Purpose:** [DESCRIPTION]
   **Parameters:** [LIST]
@@ -411,9 +415,9 @@ Request user review of spec.md and all sub-specs files, waiting for approval or 
 <review_request>
   I've created the spec documentation:
 
-  - Spec Requirements: @.agent-os/specs/YYYY-MM-DD-spec-name/spec.md
-  - Spec Summary: @.agent-os/specs/YYYY-MM-DD-spec-name/spec-lite.md
-  - Technical Spec: @.agent-os/specs/YYYY-MM-DD-spec-name/sub-specs/technical-spec.md
+- Spec Requirements: @.agent-os/specs/YYYY-MM-DD-spec-name/spec.md
+- Spec Summary: @.agent-os/specs/YYYY-MM-DD-spec-name/spec-lite.md
+- Technical Spec: @.agent-os/specs/YYYY-MM-DD-spec-name/sub-specs/technical-spec.md
   [LIST_OTHER_CREATED_SPECS]
 
   Please review and let me know if any changes are needed.

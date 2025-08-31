@@ -65,12 +65,14 @@ jobs:
       - name: Run ShellCheck (detailed)
         run: |
           echo "Running comprehensive ShellCheck analysis..."
-          find . -type f -name "*.sh" -exec shellcheck -S warning {} \; | tee shellcheck-report.txt
+          # Only check our source files, not third-party or generated code
+          find src scripts -type f -name "*.sh" -exec shellcheck -S warning {} \; | tee shellcheck-report.txt
+          shellcheck -S warning *.sh | tee -a shellcheck-report.txt
           
       - name: Check formatting (detailed)
         run: |
           echo "Checking code formatting..."
-          shfmt -d -i 2 -ci src/*.sh *.sh | tee format-report.txt || true
+          shfmt -d -i 2 -ci src/*.sh *.sh scripts/*.sh | tee format-report.txt || true
 
       - name: Run full test suite
         run: |

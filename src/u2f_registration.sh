@@ -13,7 +13,8 @@ readonly NC='\033[0m' # No Color
 # Default paths
 readonly DEFAULT_CONFIG_DIR="$HOME/.config/Yubico"
 readonly DEFAULT_U2F_KEYS_FILE="$DEFAULT_CONFIG_DIR/u2f_keys"
-readonly SYSTEM_U2F_KEYS_FILE="/etc/u2f_keys"
+# System-wide keys file (for future use)
+# readonly SYSTEM_U2F_KEYS_FILE="/etc/u2f_keys"
 
 # Timeout for Yubikey touch (in seconds)
 readonly TOUCH_TIMEOUT=30
@@ -47,7 +48,7 @@ get_install_command() {
   else
     echo "Please install pam-u2f and pamu2fcfg using your distribution's package manager"
   fi
-  
+
   return 0
 }
 
@@ -57,7 +58,7 @@ get_install_command() {
 create_yubico_directory() {
   local home_dir="${1:-$HOME}"
   local config_dir="$home_dir/.config/Yubico"
-  
+
   # Create directory if it doesn't exist
   if [[ ! -d "$config_dir" ]]; then
     if mkdir -p "$config_dir"; then
@@ -68,7 +69,7 @@ create_yubico_directory() {
       return 1
     fi
   fi
-  
+
   return 0
 }
 
@@ -77,7 +78,7 @@ create_yubico_directory() {
 # Returns: 0 on success
 init_u2f_keys_file() {
   local keys_file="${1:-$DEFAULT_U2F_KEYS_FILE}"
-  
+
   # Create file if it doesn't exist
   if [[ ! -f "$keys_file" ]]; then
     touch "$keys_file"
@@ -87,7 +88,7 @@ init_u2f_keys_file() {
     # Ensure correct permissions on existing file
     chmod 600 "$keys_file"
   fi
-  
+
   return 0
 }
 
@@ -97,18 +98,18 @@ init_u2f_keys_file() {
 # Returns: 0 on success, 1 on error
 parse_pamu2fcfg_output() {
   local output="$1"
-  
+
   if [[ -z "$output" ]]; then
     echo "Error: Empty registration output" >&2
     return 1
   fi
-  
+
   # pamu2fcfg output format: username:credential:key_handle
   if [[ "$output" =~ ^([^:]+):([^:]+):([^:]+)$ ]]; then
     local username="${BASH_REMATCH[1]}"
     local credential="${BASH_REMATCH[2]}"
     local key_handle="${BASH_REMATCH[3]}"
-    
+
     echo "username:$username"
     echo "credential:$credential"
     echo "key_handle:$key_handle"
@@ -124,7 +125,7 @@ parse_pamu2fcfg_output() {
 # Returns: 0 if valid, 1 if invalid
 validate_u2f_registration() {
   local registration="$1"
-  
+
   # Check for minimum format: username:credential:handle
   if [[ "$registration" =~ ^[^:]+:[^:]+:[^:]+$ ]]; then
     return 0
@@ -140,15 +141,16 @@ validate_u2f_registration() {
 check_existing_keys() {
   local keys_file="$1"
   local username="$2"
-  
+
   if [[ ! -f "$keys_file" ]]; then
     return 1
   fi
-  
+
   if grep -q "^$username:" "$keys_file" 2>/dev/null; then
-    local key_count=$(grep "^$username:" "$keys_file" | tr ':' '\n' | wc -l)
-    key_count=$((key_count - 1))  # Subtract username from count
-    key_count=$((key_count / 2))  # Each key has credential and handle
+    local key_count
+    key_count=$(grep "^$username:" "$keys_file" | tr ':' '\n' | wc -l)
+    key_count=$((key_count - 1)) # Subtract username from count
+    key_count=$((key_count / 2)) # Each key has credential and handle
     echo "User $username has $key_count key(s) found"
     return 0
   else
@@ -163,29 +165,31 @@ add_key_to_file() {
   local keys_file="$1"
   local registration="$2"
   local username="$3"
-  
+
   # Check if user already has keys
   if grep -q "^$username:" "$keys_file" 2>/dev/null; then
     # Append to existing line
-    local existing_line=$(grep "^$username:" "$keys_file")
+    local existing_line
+    existing_line=$(grep "^$username:" "$keys_file")
     local new_line="$existing_line:$registration"
-    
+
     # Replace the line
-    local temp_file=$(mktemp)
-    grep -v "^$username:" "$keys_file" > "$temp_file"
-    echo "$new_line" >> "$temp_file"
+    local temp_file
+    temp_file=$(mktemp)
+    grep -v "^$username:" "$keys_file" >"$temp_file"
+    echo "$new_line" >>"$temp_file"
     mv "$temp_file" "$keys_file"
     chmod 600 "$keys_file"
   else
     # Add new line for user
     if [[ "$registration" =~ ^$username: ]]; then
-      echo "$registration" >> "$keys_file"
+      echo "$registration" >>"$keys_file"
     else
-      echo "$username:$registration" >> "$keys_file"
+      echo "$username:$registration" >>"$keys_file"
     fi
     chmod 600 "$keys_file"
   fi
-  
+
   return 0
 }
 
@@ -224,14 +228,14 @@ show_timeout_message() {
 # Returns: 0 on success
 backup_u2f_keys() {
   local keys_file="$1"
-  
+
   if [[ -f "$keys_file" ]]; then
     local backup_file="$keys_file.backup"
     cp "$keys_file" "$backup_file"
     chmod 600 "$backup_file"
     echo "Backup created: $backup_file"
   fi
-  
+
   return 0
 }
 
@@ -241,21 +245,23 @@ backup_u2f_keys() {
 list_user_keys() {
   local keys_file="$1"
   local username="$2"
-  
+
   if [[ ! -f "$keys_file" ]]; then
     echo "No keys file found"
     return 0
   fi
-  
+
   if grep -q "^$username:" "$keys_file" 2>/dev/null; then
-    local line=$(grep "^$username:" "$keys_file")
+    local line
+    line=$(grep "^$username:" "$keys_file")
     # Count credentials (every odd field after username)
-    local key_count=$(echo "$line" | tr ':' '\n' | wc -l)
-    key_count=$((key_count - 1))  # Subtract username
-    key_count=$((key_count / 2))  # Each key has credential and handle
-    
+    local key_count
+    key_count=$(echo "$line" | tr ':' '\n' | wc -l)
+    key_count=$((key_count - 1)) # Subtract username
+    key_count=$((key_count / 2)) # Each key has credential and handle
+
     echo -e "${GREEN}$key_count key(s) registered for user $username${NC}"
-    
+
     # Display key numbers
     for i in $(seq 1 $key_count); do
       echo "  - Key #$i"
@@ -263,7 +269,7 @@ list_user_keys() {
   else
     echo "No keys registered for user $username"
   fi
-  
+
   return 0
 }
 
@@ -273,12 +279,12 @@ list_user_keys() {
 register_yubikey_mock() {
   local username="$1"
   local keys_file="$2"
-  
+
   # Call mocked pamu2fcfg
   local output
   output=$(pamu2fcfg -u "$username" 2>&1)
   local exit_code=$?
-  
+
   if [[ $exit_code -eq 0 ]]; then
     if validate_u2f_registration "$output"; then
       add_key_to_file "$keys_file" "$output" "$username"
@@ -302,12 +308,12 @@ register_yubikey_mock() {
 register_yubikey() {
   local username="${1:-$USER}"
   local keys_file="$DEFAULT_U2F_KEYS_FILE"
-  
+
   echo "==================================="
   echo "    Yubikey U2F Registration"
   echo "==================================="
   echo ""
-  
+
   # Check if pamu2fcfg is installed
   if ! check_pamu2fcfg_installed; then
     echo ""
@@ -315,15 +321,15 @@ register_yubikey() {
     get_install_command
     return 1
   fi
-  
+
   # Create directory structure
   if ! create_yubico_directory; then
     return 1
   fi
-  
+
   # Initialize keys file
   init_u2f_keys_file "$keys_file"
-  
+
   # Check for existing keys
   echo "Checking for existing keys..."
   if check_existing_keys "$keys_file" "$username"; then
@@ -337,41 +343,42 @@ register_yubikey() {
   else
     echo "No existing keys found for user $username"
   fi
-  
+
   # Backup existing keys
   if [[ -f "$keys_file" ]] && [[ -s "$keys_file" ]]; then
     backup_u2f_keys "$keys_file"
   fi
-  
+
   echo ""
   echo "Please insert your Yubikey and press Enter to continue..."
   read -r
-  
+
   # Show touch prompt
   show_touch_prompt
-  
+
   # Run pamu2fcfg with timeout
   local registration_output
   local pamu2fcfg_cmd="pamu2fcfg -u $username"
-  
+
   # For additional keys, use -n flag
   if check_existing_keys "$keys_file" "$username" >/dev/null 2>&1; then
     # Get existing registration for -n flag
-    local existing_line=$(grep "^$username:" "$keys_file")
+    local existing_line
+    existing_line=$(grep "^$username:" "$keys_file")
     # Remove username prefix
     existing_line=${existing_line#$username:}
     pamu2fcfg_cmd="pamu2fcfg -u $username -n $existing_line"
   fi
-  
+
   # Execute with timeout
   if command -v timeout >/dev/null 2>&1; then
     registration_output=$(timeout $TOUCH_TIMEOUT $pamu2fcfg_cmd 2>&1)
   else
     registration_output=$($pamu2fcfg_cmd 2>&1)
   fi
-  
+
   local exit_code=$?
-  
+
   # Handle registration result
   if [[ $exit_code -eq 0 ]]; then
     # Validate output format
@@ -385,15 +392,15 @@ register_yubikey() {
         # For first key, add complete line
         add_key_to_file "$keys_file" "$registration_output" "$username"
       fi
-      
+
       show_registration_success
       echo ""
       echo "Registration saved to: $keys_file"
       echo ""
-      
+
       # Show registered keys
       list_user_keys "$keys_file" "$username"
-      
+
       return 0
     else
       echo -e "${RED}✗ Registration failed: Invalid format${NC}" >&2
@@ -405,7 +412,7 @@ register_yubikey() {
     return 1
   else
     echo -e "${RED}✗ Registration failed${NC}" >&2
-    
+
     # Parse error message
     if [[ "$registration_output" =~ "No U2F device" ]] || [[ "$registration_output" =~ "No device found" ]]; then
       echo "No Yubikey detected. Please ensure your Yubikey is inserted."
@@ -415,7 +422,7 @@ register_yubikey() {
     else
       echo "Error: $registration_output"
     fi
-    
+
     return 1
   fi
 }
@@ -430,7 +437,7 @@ registration_wizard() {
   echo ""
   echo "This wizard will help you register your Yubikey for U2F authentication."
   echo ""
-  
+
   # Step 1: Check requirements
   echo "Step 1: Checking requirements..."
   if ! check_pamu2fcfg_installed; then
@@ -445,24 +452,24 @@ registration_wizard() {
   fi
   echo -e "${GREEN}✓ Requirements met${NC}"
   echo ""
-  
+
   # Step 2: User selection
   echo "Step 2: User selection"
   echo "Register Yubikey for user: $USER"
   read -p "Use different username? (y/N): " -n 1 -r
   echo
-  
+
   local target_user="$USER"
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     read -p "Enter username: " target_user
   fi
   echo ""
-  
+
   # Step 3: Register key
   echo "Step 3: Yubikey registration"
   register_yubikey "$target_user"
   local result=$?
-  
+
   echo ""
   if [[ $result -eq 0 ]]; then
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -475,7 +482,7 @@ registration_wizard() {
   else
     echo -e "${RED}Registration failed. Please try again.${NC}"
   fi
-  
+
   echo ""
   read -p "Press Enter to exit..."
   return $result

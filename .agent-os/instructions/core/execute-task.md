@@ -16,7 +16,6 @@ Execute a specific task along with its sub-tasks systematically following a TDD 
   EXECUTE: @.agent-os/instructions/meta/pre-flight.md
 </pre_flight_check>
 
-
 <process_flow>
 
 <step number="1" name="task_understanding">

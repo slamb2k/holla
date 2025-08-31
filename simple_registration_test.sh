@@ -41,9 +41,9 @@ run_test() {
   local test_name="$1"
   local expected="$2"
   local actual="$3"
-  
+
   ((TESTS_RUN++))
-  
+
   if [[ "$actual" == *"$expected"* ]]; then
     echo -e "${GREEN}✓${NC} $test_name"
     ((TESTS_PASSED++))
@@ -145,7 +145,7 @@ run_test "Reject invalid format" "invalid" "$invalid_result"
 # Test 7: Add key to file
 echo ""
 echo "Testing key addition to file..."
-echo -n "" > "$TEST_U2F_KEYS_FILE"  # Clear file
+echo -n "" >"$TEST_U2F_KEYS_FILE" # Clear file
 add_key_to_file "$TEST_U2F_KEYS_FILE" "testuser:cred1:handle1" "testuser"
 content=$(cat "$TEST_U2F_KEYS_FILE")
 run_test "Add first key" "testuser:cred1:handle1" "$content"
@@ -171,7 +171,7 @@ run_test "No keys for new user" "not_found" "$noexist"
 # Test 9: Backup functionality
 echo ""
 echo "Testing backup creation..."
-echo "backup_test_content" > "$TEST_U2F_KEYS_FILE"
+echo "backup_test_content" >"$TEST_U2F_KEYS_FILE"
 backup_u2f_keys "$TEST_U2F_KEYS_FILE" >/dev/null 2>&1
 if [[ -f "$TEST_U2F_KEYS_FILE.backup" ]]; then
   backup_result="created"
@@ -185,7 +185,7 @@ run_test "Backup content preserved" "backup_test_content" "$backup_content"
 # Test 10: List user keys
 echo ""
 echo "Testing key listing..."
-echo "listuser:cred1:handle1:cred2:handle2" > "$TEST_U2F_KEYS_FILE"
+echo "listuser:cred1:handle1:cred2:handle2" >"$TEST_U2F_KEYS_FILE"
 list_output=$(list_user_keys "$TEST_U2F_KEYS_FILE" "listuser" 2>&1)
 run_test "Count registered keys" "2 key(s) registered" "$list_output"
 
@@ -213,7 +213,7 @@ pamu2fcfg() {
 export -f pamu2fcfg
 
 # Create fresh keys file
-echo -n "" > "$TEST_U2F_KEYS_FILE"
+echo -n "" >"$TEST_U2F_KEYS_FILE"
 register_yubikey_mock "mockuser" "$TEST_U2F_KEYS_FILE" >/dev/null 2>&1
 if grep -q "mock_cred" "$TEST_U2F_KEYS_FILE"; then
   reg_result="registered"
