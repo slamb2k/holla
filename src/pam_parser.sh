@@ -107,7 +107,8 @@ validate_pam_syntax() {
   fi
   
   # Extract components
-  local module_type=$(echo "$parsed_output" | grep "^module_type:" | cut -d: -f2)
+  local module_type
+  module_type=$(echo "$parsed_output" | grep "^module_type:" | cut -d: -f2)
   local control_flag=$(echo "$parsed_output" | grep "^control_flag:" | cut -d: -f2)
   local module_path=$(echo "$parsed_output" | grep "^module_path:" | cut -d: -f2)
   
@@ -314,7 +315,8 @@ analyze_pam_structure() {
     local parsed_output
     parsed_output=$(parse_pam_line "$line")
     
-    local module_type=$(echo "$parsed_output" | grep "^module_type:" | cut -d: -f2)
+    local module_type
+  module_type=$(echo "$parsed_output" | grep "^module_type:" | cut -d: -f2)
     local control_flag=$(echo "$parsed_output" | grep "^control_flag:" | cut -d: -f2)
     local module_path=$(echo "$parsed_output" | grep "^module_path:" | cut -d: -f2)
     

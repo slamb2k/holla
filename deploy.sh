@@ -13,7 +13,8 @@ NC='\033[0m' # No Color
 
 # Project metadata
 PROJECT_NAME="yubikey-pam-installer"
-REPO_URL="https://github.com/slamb2k/holla"
+# Repository URL (for future use)
+# REPO_URL="https://github.com/slamb2k/holla"
 
 # Functions
 log_info() {
@@ -115,7 +116,8 @@ deploy_to_staging() {
     log_info "Deploying to staging environment..."
     
     # Create temporary staging directory
-    local staging_dir="/tmp/${PROJECT_NAME}-staging-$(date +%s)"
+    local staging_dir
+    staging_dir="/tmp/${PROJECT_NAME}-staging-$(date +%s)"
     mkdir -p "$staging_dir"
     
     # Copy built packages

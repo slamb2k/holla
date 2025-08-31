@@ -13,7 +13,8 @@ readonly NC='\033[0m' # No Color
 # Default paths
 readonly DEFAULT_CONFIG_DIR="$HOME/.config/Yubico"
 readonly DEFAULT_U2F_KEYS_FILE="$DEFAULT_CONFIG_DIR/u2f_keys"
-readonly SYSTEM_U2F_KEYS_FILE="/etc/u2f_keys"
+# System-wide keys file (for future use)
+# readonly SYSTEM_U2F_KEYS_FILE="/etc/u2f_keys"
 
 # Timeout for Yubikey touch (in seconds)
 readonly TOUCH_TIMEOUT=30
@@ -146,7 +147,8 @@ check_existing_keys() {
   fi
   
   if grep -q "^$username:" "$keys_file" 2>/dev/null; then
-    local key_count=$(grep "^$username:" "$keys_file" | tr ':' '\n' | wc -l)
+    local key_count
+    key_count=$(grep "^$username:" "$keys_file" | tr ':' '\n' | wc -l)
     key_count=$((key_count - 1))  # Subtract username from count
     key_count=$((key_count / 2))  # Each key has credential and handle
     echo "User $username has $key_count key(s) found"
@@ -167,11 +169,13 @@ add_key_to_file() {
   # Check if user already has keys
   if grep -q "^$username:" "$keys_file" 2>/dev/null; then
     # Append to existing line
-    local existing_line=$(grep "^$username:" "$keys_file")
+    local existing_line
+    existing_line=$(grep "^$username:" "$keys_file")
     local new_line="$existing_line:$registration"
     
     # Replace the line
-    local temp_file=$(mktemp)
+    local temp_file
+    temp_file=$(mktemp)
     grep -v "^$username:" "$keys_file" > "$temp_file"
     echo "$new_line" >> "$temp_file"
     mv "$temp_file" "$keys_file"
@@ -248,9 +252,11 @@ list_user_keys() {
   fi
   
   if grep -q "^$username:" "$keys_file" 2>/dev/null; then
-    local line=$(grep "^$username:" "$keys_file")
+    local line
+    line=$(grep "^$username:" "$keys_file")
     # Count credentials (every odd field after username)
-    local key_count=$(echo "$line" | tr ':' '\n' | wc -l)
+    local key_count
+    key_count=$(echo "$line" | tr ':' '\n' | wc -l)
     key_count=$((key_count - 1))  # Subtract username
     key_count=$((key_count / 2))  # Each key has credential and handle
     
@@ -357,7 +363,8 @@ register_yubikey() {
   # For additional keys, use -n flag
   if check_existing_keys "$keys_file" "$username" >/dev/null 2>&1; then
     # Get existing registration for -n flag
-    local existing_line=$(grep "^$username:" "$keys_file")
+    local existing_line
+    existing_line=$(grep "^$username:" "$keys_file")
     # Remove username prefix
     existing_line=${existing_line#$username:}
     pamu2fcfg_cmd="pamu2fcfg -u $username -n $existing_line"

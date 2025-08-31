@@ -30,12 +30,6 @@ jobs:
           severity: 'style'  # Check all severity levels
           scandir: './src'
           additional_files: '*.sh scripts/*.sh'
-          ignore_paths: |
-            .agent-os
-            .claude
-            .git
-            node_modules
-            .venv
           format: 'json'
         continue-on-error: true
 

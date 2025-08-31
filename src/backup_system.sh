@@ -17,7 +17,8 @@ readonly MIN_DISK_SPACE_KB=10240
 # Returns: 0 on success, 1 on error
 create_backup_directory() {
   local base_dir="${1:-$DEFAULT_BACKUP_BASE}"
-  local timestamp=$(date +%Y%m%d-%H%M%S)
+  local timestamp
+  timestamp=$(date +%Y%m%d-%H%M%S)
   local backup_dir="$base_dir/pam.d.backup-$timestamp"
   
   # Create the backup directory
@@ -38,7 +39,8 @@ check_disk_space() {
   local required_kb="${2:-$MIN_DISK_SPACE_KB}"
   
   # Get available space in KB
-  local available_kb=$(df -k "$check_dir" 2>/dev/null | awk 'NR==2 {print $4}')
+  local available_kb
+  available_kb=$(df -k "$check_dir" 2>/dev/null | awk 'NR==2 {print $4}')
   
   if [[ -z "$available_kb" ]]; then
     echo "Error: Unable to determine available disk space" >&2
@@ -130,10 +132,12 @@ log_action() {
   local action_type="$1"
   local message="$2"
   local log_file="${3:-$DEFAULT_LOG_FILE}"
-  local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+  local timestamp
+  timestamp=$(date '+%Y-%m-%d %H:%M:%S')
   
   # Create log directory if it doesn't exist
-  local log_dir=$(dirname "$log_file")
+  local log_dir
+  log_dir=$(dirname "$log_file")
   [[ -d "$log_dir" ]] || mkdir -p "$log_dir"
   
   # Append to log file
@@ -192,7 +196,8 @@ list_backups() {
   fi
   
   # Find and list backup directories
-  local backups=$(find "$base_dir" -maxdepth 1 -type d -name "pam.d.backup-*" 2>/dev/null | sort)
+  local backups
+  backups=$(find "$base_dir" -maxdepth 1 -type d -name "pam.d.backup-*" 2>/dev/null | sort)
   
   if [[ -z "$backups" ]]; then
     echo "No backups found"
@@ -201,12 +206,15 @@ list_backups() {
   
   echo "Available backups:"
   for backup in $backups; do
-    local backup_name=$(basename "$backup")
-    local backup_date=${backup_name#pam.d.backup-}
+    local backup_name
+    backup_name=$(basename "$backup")
+    # Extract date from backup name (for potential future use)
+    # local backup_date=${backup_name#pam.d.backup-}
     
     # Check if metadata exists
     if [[ -f "$backup/.backup_metadata" ]]; then
-      local description=$(grep "^description=" "$backup/.backup_metadata" 2>/dev/null | cut -d= -f2)
+      local description
+      description=$(grep "^description=" "$backup/.backup_metadata" 2>/dev/null | cut -d= -f2)
       echo "  $backup_name - $description"
     else
       echo "  $backup_name"
@@ -223,7 +231,8 @@ list_backups() {
 get_latest_backup() {
   local base_dir="${1:-$DEFAULT_BACKUP_BASE}"
   
-  local latest=$(find "$base_dir" -maxdepth 1 -type d -name "pam.d.backup-*" 2>/dev/null | sort | tail -1)
+  local latest
+  latest=$(find "$base_dir" -maxdepth 1 -type d -name "pam.d.backup-*" 2>/dev/null | sort | tail -1)
   
   if [[ -n "$latest" ]]; then
     echo "$latest"

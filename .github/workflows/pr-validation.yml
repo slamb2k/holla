@@ -28,13 +28,7 @@ jobs:
           check_together: 'yes'
           severity: 'warning'
           scandir: './src'
-          additional_files: '*.sh'
-          ignore_paths: |
-            .agent-os
-            .claude
-            .git
-            node_modules
-            .venv
+          additional_files: '*.sh scripts/*.sh'
 
   # Format check - fails fast
   format-check:
