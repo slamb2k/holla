@@ -4,6 +4,10 @@ on:
   pull_request:
     branches: [ main, develop ]
     types: [ opened, synchronize, reopened ]
+    paths-ignore:
+      - '.github/workflows/**'
+      - '.github/dependabot.yml'
+      - '.github/CODEOWNERS'
   workflow_dispatch:
 
 env:
@@ -15,7 +19,6 @@ jobs:
     name: Lint - ShellCheck
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,7 +38,6 @@ jobs:
     name: Format - shfmt
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -57,7 +59,6 @@ jobs:
     name: Security - Trivy
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -83,7 +84,6 @@ jobs:
     name: Docs - Markdown Lint
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -98,7 +98,6 @@ jobs:
     name: Tests - Unit
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: github.actor != 'dependabot[bot]'
     strategy:
       matrix:
         test-suite:
@@ -131,7 +130,6 @@ jobs:
     name: Tests - Integration
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: github.actor != 'dependabot[bot]'
     needs: [lint-shellcheck, format-check]
     steps:
       - name: Checkout code
@@ -159,7 +157,6 @@ jobs:
     name: Compatibility - Multi-OS
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
-    if: github.actor != 'dependabot[bot]'
     strategy:
       fail-fast: false
       matrix:
