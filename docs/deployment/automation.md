@@ -106,7 +106,7 @@ Automated on pushes to `main` and version tags:
 ```
 main
 ├── feat/feature-name       # Feature branches
-├── fix/bug-description     # Bug fixes  
+├── fix/bug-description     # Bug fixes
 ├── hotfix/critical-fix     # Emergency fixes
 └── develop                 # Integration branch
 ```
@@ -224,7 +224,7 @@ curl -X POST -H "Authorization: token $TOKEN" \
 ./deploy.sh build
 ./scripts/create-apt-repo.sh dist/*.deb
 
-# YUM repository  
+# YUM repository
 ./scripts/create-yum-repo.sh dist/*.rpm
 
 # AUR package
@@ -267,7 +267,7 @@ git tag -d v1.0.1
 git push origin :refs/tags/v1.0.1
 git revert HEAD~1
 
-# Package rollback  
+# Package rollback
 sudo apt-get install yubikey-pam-installer=1.0.0-1
 
 # Emergency PAM restore
@@ -377,7 +377,7 @@ rpm -qpi package.rpm
 ### Support Channels
 
 - **Issues:** GitHub Issues
-- **Discussions:** GitHub Discussions  
+- **Discussions:** GitHub Discussions
 - **Security:** security@project.org
 - **Documentation:** /docs/ directory
 

@@ -35,24 +35,24 @@ yubikey-pam-installer/
 ├── usr/
 │   ├── local/
 │   │   └── bin/
-│   │       ├── yubikey-pam-install
-│   │       ├── yubikey-pam-register
-│   │       └── yubikey-pam-uninstall
+│   │   ├── yubikey-pam-install
+│   │   ├── yubikey-pam-register
+│   │   └── yubikey-pam-uninstall
 │   └── share/
-│       ├── yubikey-pam-installer/
-│       │   ├── src/
-│       │   └── docs/
-│       └── man/
-│           └── man1/
-│               └── yubikey-pam-installer.1
+│   ├── yubikey-pam-installer/
+│   │   ├── src/
+│   │   └── docs/
+│   └── man/
+│   └── man1/
+│   └── yubikey-pam-installer.1
 ├── etc/
 │   └── yubikey-pam/
-│       └── config.default
+│   └── config.default
 └── DEBIAN/ (or RPM spec)
-    ├── control
-    ├── postinst
-    ├── prerm
-    └── postrm
+├── control
+├── postinst
+├── prerm
+└── postrm
 ```
 
 ## Building Packages
@@ -178,11 +178,11 @@ chmod 700 /etc/yubikey-pam/backup
 
 # Create symlinks for convenience
 ln -sf /usr/share/yubikey-pam-installer/src/u2f_registration.sh \
-       /usr/local/bin/yubikey-register
+   /usr/local/bin/yubikey-register
 
 # Check for required dependencies
 if ! command -v pamu2fcfg >/dev/null 2>&1; then
-    echo "Warning: pamu2fcfg not found. Please install libpam-u2f"
+echo "Warning: pamu2fcfg not found. Please install libpam-u2f"
 fi
 
 echo "Yubikey PAM Installer successfully installed!"
@@ -202,13 +202,13 @@ set -e
 
 # Check if PAM is configured with Yubikey
 if grep -q "pam_u2f.so" /etc/pam.d/sudo 2>/dev/null; then
-    echo "Warning: Yubikey PAM configuration detected"
-    echo "Run 'yubikey-pam-uninstall' before removing package"
-    read -p "Continue anyway? (y/N) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
-    fi
+echo "Warning: Yubikey PAM configuration detected"
+echo "Run 'yubikey-pam-uninstall' before removing package"
+read -p "Continue anyway? (y/N) " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+exit 1
+fi
 fi
 
 exit 0
@@ -224,8 +224,8 @@ set -e
 
 # Clean up logs (optional)
 if [ "$1" = "purge" ]; then
-    rm -rf /var/log/yubikey-pam
-    rm -rf /etc/yubikey-pam
+rm -rf /var/log/yubikey-pam
+rm -rf /etc/yubikey-pam
 fi
 
 # Remove symlinks
@@ -248,8 +248,8 @@ make clean
 make package
 
 # 3. Build specific format
-make deb    # Debian/Ubuntu
-make rpm    # Fedora/RHEL
+make deb# Debian/Ubuntu
+make rpm# Fedora/RHEL
 make arch   # Arch Linux
 
 # 4. Check created packages
@@ -371,20 +371,20 @@ Homepage: https://github.com/org/yubikey-pam-installer
 ### RPM Spec File
 
 ```spec
-Name:           yubikey-pam-installer
-Version:        1.0.0
-Release:        1%{?dist}
-Summary:        Yubikey U2F PAM Configuration Tool
+Name:   yubikey-pam-installer
+Version:1.0.0
+Release:1%{?dist}
+Summary:Yubikey U2F PAM Configuration Tool
 
-License:        MIT
-URL:            https://github.com/org/yubikey-pam-installer
-Source0:        %{name}-%{version}.tar.gz
+License:MIT
+URL:https://github.com/org/yubikey-pam-installer
+Source0:%{name}-%{version}.tar.gz
 
-Requires:       pam-u2f
-Requires:       pamu2fcfg
-Requires:       bash >= 5.0
+Requires:   pam-u2f
+Requires:   pamu2fcfg
+Requires:   bash >= 5.0
 
-BuildArch:      noarch
+BuildArch:  noarch
 
 %description
 Automated tool for configuring Linux PAM to use Yubikey
@@ -417,42 +417,37 @@ name: Build Packages
 
 on:
   push:
-    tags:
-      - 'v*'
+tags:
+  - 'v*'
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v2
-    
-    - name: Install FPM
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ruby ruby-dev build-essential
-        sudo gem install fpm
-    
-    - name: Build packages
-      run: make package
-    
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: packages
-        path: |
-          *.deb
-          *.rpm
-          *.pkg.tar.xz
-    
-    - name: Create Release
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          *.deb
-          *.rpm
-          *.pkg.tar.xz
+runs-on: ubuntu-latest
+steps:
+- uses: actions/checkout@v2
+- name: Install FPM
+  run: |
+sudo apt-get update
+sudo apt-get install -y ruby ruby-dev build-essential
+sudo gem install fpm
+- name: Build packages
+  run: make package
+- name: Upload artifacts
+  uses: actions/upload-artifact@v2
+  with:
+name: packages
+path: |
+  *.deb
+  *.rpm
+  *.pkg.tar.xz
+- name: Create Release
+  if: startsWith(github.ref, 'refs/tags/')
+  uses: softprops/action-gh-release@v1
+  with:
+files: |
+  *.deb
+  *.rpm
+  *.pkg.tar.xz
 ```
 
 ## Next Steps

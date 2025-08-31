@@ -33,7 +33,6 @@ sudo apt-get install -y \
    # Fork on GitHub first, then:
    git clone https://github.com/YOUR_USERNAME/yubikey-pam-installer.git
    cd yubikey-pam-installer
-   
    # Add upstream remote
    git remote add upstream https://github.com/[org]/yubikey-pam-installer.git
    ```
@@ -42,7 +41,6 @@ sudo apt-get install -y \
    ```bash
    # Create feature branch
    git checkout -b feature/your-feature-name
-   
    # Keep main branch clean
    git checkout main
    git pull upstream main
@@ -136,10 +134,8 @@ teardown() {
 @test "description of test" {
   # Arrange
   input="test input"
-  
   # Act
   run function_to_test "$input"
-  
   # Assert
   [ "$status" -eq 0 ]
   [[ "$output" =~ "expected" ]]
@@ -264,10 +260,8 @@ Closes #123"
    # Update from upstream
    git fetch upstream
    git rebase upstream/main
-   
    # Run tests
    bats tests/*.bats
-   
    # Check code quality
    shellcheck src/*.sh
    ```
