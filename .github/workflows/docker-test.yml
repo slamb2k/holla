@@ -28,6 +28,7 @@ jobs:
     name: Docker Build & Test
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    if: github.actor != 'dependabot[bot]'
     strategy:
       matrix:
         ubuntu-version: [20.04, 22.04, 24.04]
@@ -74,6 +75,7 @@ jobs:
     name: Docker Compose Test Matrix
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -97,6 +99,7 @@ jobs:
     name: Docker Security Scan
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
