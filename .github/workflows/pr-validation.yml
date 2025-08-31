@@ -47,8 +47,7 @@ jobs:
         run: |
           echo "Checking shell script formatting..."
           # Only check our actual source files, not generated or third-party code
-          shfmt -d -i 2 -ci src/*.sh *.sh scripts/*.sh
-          if [ $? -ne 0 ]; then
+          if ! shfmt -d -i 2 -ci src/*.sh *.sh scripts/*.sh; then
             echo "::error::Shell scripts are not properly formatted. Run 'shfmt -i 2 -w src/*.sh *.sh scripts/*.sh' to fix."
             exit 1
           fi
@@ -93,7 +92,6 @@ jobs:
         with:
           globs: |
             README.md
-            CHANGELOG.md
             docs/**/*.md
             !node_modules
             !.agent-os
