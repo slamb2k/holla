@@ -20,9 +20,9 @@ trap cleanup EXIT
 # Setup demo PAM directory
 setup_demo() {
   mkdir -p "$DEMO_PAM_DIR"
-  
+
   # Create realistic PAM files
-  cat > "$DEMO_PAM_DIR/sudo" <<'EOF'
+  cat >"$DEMO_PAM_DIR/sudo" <<'EOF'
 #%PAM-1.0
 auth       required   pam_env.so
 auth       required   pam_unix.so nullok_secure
@@ -32,7 +32,7 @@ session    required   pam_unix.so
 session    optional   pam_umask.so
 EOF
 
-  cat > "$DEMO_PAM_DIR/su" <<'EOF'
+  cat >"$DEMO_PAM_DIR/su" <<'EOF'
 #%PAM-1.0
 auth       sufficient pam_rootok.so
 auth       required   pam_unix.so
@@ -40,7 +40,7 @@ account    required   pam_unix.so
 session    required   pam_unix.so
 EOF
 
-  cat > "$DEMO_PAM_DIR/login" <<'EOF'
+  cat >"$DEMO_PAM_DIR/login" <<'EOF'
 #%PAM-1.0
 auth       required   pam_securetty.so
 auth       required   pam_unix.so nullok
@@ -79,7 +79,7 @@ echo ""
 
 echo "3. Creating post-modification backup"
 echo "-----------------------------------"
-sleep 1  # Ensure different timestamp
+sleep 1 # Ensure different timestamp
 backup2=$(create_backup_directory "$DEMO_BACKUP_BASE")
 backup_pam_config "$DEMO_PAM_DIR" "$backup2"
 save_backup_metadata "$backup2" "After adding U2F authentication"

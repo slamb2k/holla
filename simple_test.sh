@@ -19,9 +19,9 @@ run_test() {
   local test_name="$1"
   local expected="$2"
   local actual="$3"
-  
+
   ((TESTS_RUN++))
-  
+
   if [[ "$actual" == *"$expected"* ]]; then
     echo -e "${GREEN}✓${NC} $test_name"
     ((TESTS_PASSED++))
@@ -98,7 +98,7 @@ run_test "Invalid control flag detected" "Invalid control flag" "$validate_resul
 echo ""
 echo "Testing file parsing..."
 TEST_FILE="/tmp/test_pam"
-cat > "$TEST_FILE" <<EOF
+cat >"$TEST_FILE" <<EOF
 # Test PAM file
 auth    required    pam_env.so
 auth    sufficient  pam_u2f.so

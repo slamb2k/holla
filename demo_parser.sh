@@ -7,7 +7,7 @@ source src/pam_parser.sh
 # Create demo PAM file
 DEMO_FILE="/tmp/demo_pam_sudo"
 
-cat > "$DEMO_FILE" <<'EOF'
+cat >"$DEMO_FILE" <<'EOF'
 # PAM configuration for sudo service
 # This is a typical sudo PAM configuration
 

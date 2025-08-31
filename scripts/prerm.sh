@@ -23,7 +23,7 @@ if grep -q "pam_u2f.so" /etc/pam.d/* 2>/dev/null; then
   echo "To safely remove Yubikey configuration first, run:"
   echo "  sudo yubikey-pam-uninstall"
   echo ""
-  
+
   # In non-interactive mode, continue (for automated systems)
   if [ ! -t 0 ]; then
     echo "Non-interactive mode detected, continuing..."

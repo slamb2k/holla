@@ -23,11 +23,11 @@ chmod +x demo_*.sh 2>/dev/null || true
 run_test() {
   local test_name="$1"
   local test_command="$2"
-  
+
   echo ""
   echo "Running $test_name..."
   echo "-----------------------------------"
-  
+
   if eval "$test_command"; then
     echo "✓ $test_name passed"
   else
@@ -50,11 +50,11 @@ if [ -f "./simple_registration_test.sh" ]; then
 fi
 
 # Run bats tests if available
-if command -v bats &> /dev/null; then
+if command -v bats &>/dev/null; then
   echo ""
   echo "Running BATS Test Suites..."
   echo "-----------------------------------"
-  
+
   if [ -d tests ]; then
     for test_file in tests/*.bats; do
       if [ -f "$test_file" ]; then
