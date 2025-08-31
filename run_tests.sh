@@ -27,6 +27,7 @@ chmod +x src/pam_parser.sh
 echo "Running PAM Parser Tests..."
 echo "-----------------------------------"
 bats tests/test_pam_parser.bats
+TEST_RESULT=$?
 
 echo ""
 echo "==================================="
@@ -34,7 +35,7 @@ echo "Test Results Summary"
 echo "==================================="
 
 # Check if all tests passed
-if [ $? -eq 0 ]; then
+if [ $TEST_RESULT -eq 0 ]; then
   echo "✓ All tests passed successfully!"
 else
   echo "✗ Some tests failed. Please review the output above."

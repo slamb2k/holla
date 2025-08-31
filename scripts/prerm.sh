@@ -38,9 +38,10 @@ if grep -q "pam_u2f.so" /etc/pam.d/* 2>/dev/null; then
 fi
 
 # Check for existing backups
-if [ -d /etc/pam.d.backup-* ] 2>/dev/null; then
+BACKUP_DIRS=$(ls -d /etc/pam.d.backup-* 2>/dev/null || true)
+if [ -n "$BACKUP_DIRS" ]; then
   echo -e "${YELLOW}Note: PAM backups found:${NC}"
-  ls -d /etc/pam.d.backup-* 2>/dev/null | sed 's/^/  - /'
+  echo "$BACKUP_DIRS" | sed 's/^/  - /'
   echo "These backups will be preserved"
 fi
 

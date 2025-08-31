@@ -109,18 +109,20 @@ validate_pam_syntax() {
   # Extract components
   local module_type
   module_type=$(echo "$parsed_output" | grep "^module_type:" | cut -d: -f2)
-  local control_flag=$(echo "$parsed_output" | grep "^control_flag:" | cut -d: -f2)
-  local module_path=$(echo "$parsed_output" | grep "^module_path:" | cut -d: -f2)
+  local control_flag
+  control_flag=$(echo "$parsed_output" | grep "^control_flag:" | cut -d: -f2)
+  local module_path
+  module_path=$(echo "$parsed_output" | grep "^module_path:" | cut -d: -f2)
   
   # Validate module type
-  if [[ ! " $VALID_MODULE_TYPES " =~ " $module_type " ]]; then
+  if [[ ! " $VALID_MODULE_TYPES " == *" $module_type "* ]]; then
     echo "Error: Invalid module type: $module_type"
     return 1
   fi
   
   # Validate control flag (simple flags or complex with brackets)
   if [[ ! "$control_flag" =~ ^\[.*\]$ ]]; then
-    if [[ ! " $VALID_CONTROL_FLAGS " =~ " $control_flag " ]]; then
+    if [[ ! " $VALID_CONTROL_FLAGS " == *" $control_flag "* ]]; then
       echo "Error: Invalid control flag: $control_flag"
       return 1
     fi
@@ -298,7 +300,7 @@ validate_pam_file() {
 analyze_pam_structure() {
   local pam_file="$1"
   local current_section=""
-  local auth_stack=""
+  # local auth_stack=""  # Reserved for future authentication stack analysis
   local has_sufficient=false
   local has_required=false
   
@@ -316,9 +318,11 @@ analyze_pam_structure() {
     parsed_output=$(parse_pam_line "$line")
     
     local module_type
-  module_type=$(echo "$parsed_output" | grep "^module_type:" | cut -d: -f2)
-    local control_flag=$(echo "$parsed_output" | grep "^control_flag:" | cut -d: -f2)
-    local module_path=$(echo "$parsed_output" | grep "^module_path:" | cut -d: -f2)
+    module_type=$(echo "$parsed_output" | grep "^module_type:" | cut -d: -f2)
+    local control_flag
+    control_flag=$(echo "$parsed_output" | grep "^control_flag:" | cut -d: -f2)
+    local module_path
+    module_path=$(echo "$parsed_output" | grep "^module_path:" | cut -d: -f2)
     
     # Track section changes
     if [[ "$module_type" != "$current_section" ]]; then

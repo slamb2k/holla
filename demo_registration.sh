@@ -38,7 +38,8 @@ mock_pamu2fcfg() {
   sleep 2
   
   # Generate mock credential data
-  local timestamp=$(date +%s)
+  local timestamp
+  timestamp=$(date +%s)
   local mock_cred="MockCredential_${timestamp}"
   local mock_handle="MockHandle_${timestamp}"
   
