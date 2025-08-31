@@ -150,7 +150,7 @@ For comprehensive documentation navigation, see [/docs/INDEX.md](/docs/INDEX.md)
 
 ### Documentation Guidelines for AI Agents
 
-When agents are creating documentation (only when explicitly requested by the user):
+When creating documentation (only when explicitly requested by the user):
 
 1. **Check existing structure first**: Run `find docs -type f -name "*.md" | sort` to see current organization
 2. **Use appropriate subfolders**:
