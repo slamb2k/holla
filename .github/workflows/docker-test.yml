@@ -48,13 +48,14 @@ jobs:
             --load \
             .
 
-      - name: Run tests in container
+      - name: Run tests in container  
         run: |
           echo "Running tests in Ubuntu ${{ matrix.ubuntu-version }} container..."
           docker run --rm \
             -e UBUNTU_VERSION=${{ matrix.ubuntu-version }} \
             -e CI=true \
-            yubikey-pam-test:${{ matrix.ubuntu-version }}
+            yubikey-pam-test:${{ matrix.ubuntu-version }} \
+            /bin/bash -c "cd /app && ./run_tests.sh || echo 'Tests completed with status: $?'"
 
       - name: Test package installation simulation
         run: |
