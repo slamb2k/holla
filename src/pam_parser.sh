@@ -101,8 +101,8 @@ validate_pam_syntax() {
   local parsed_output
   parsed_output=$(parse_pam_line "$line")
 
-  if [[ "$parsed_output" =~ error: ]]; then
-    echo "Error: Failed to parse line"
+  if [[ "$parsed_output" =~ Error: ]]; then
+    echo "$parsed_output"  # Pass through the actual error message
     return 1
   fi
 
