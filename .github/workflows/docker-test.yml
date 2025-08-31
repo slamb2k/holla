@@ -87,14 +87,14 @@ jobs:
       - name: Run Docker Compose test matrix
         run: |
           echo "Running Docker Compose test matrix..."
-          docker-compose -f docker-compose.yml build
-          docker-compose -f docker-compose.yml run --rm ubuntu20-test
-          docker-compose -f docker-compose.yml run --rm ubuntu24-test
+          docker compose -f docker-compose.yml build
+          docker compose -f docker-compose.yml run --rm ubuntu20-test
+          docker compose -f docker-compose.yml run --rm ubuntu24-test
 
       - name: Cleanup Docker Compose
         if: always()
         run: |
-          docker-compose down --rmi local --volumes --remove-orphans
+          docker compose down --rmi local --volumes --remove-orphans
 
   docker-security-scan:
     name: Docker Security Scan
