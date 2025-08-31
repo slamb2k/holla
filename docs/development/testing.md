@@ -116,6 +116,7 @@ teardown() {
 ### Test Best Practices
 
 #### 1. Test Naming
+
 ```bash
 # Good test names
 @test "parse valid PAM auth line with multiple arguments" { }
@@ -128,6 +129,7 @@ teardown() {
 ```
 
 #### 2. Assertions
+
 ```bash
 # Check exit status
 [ "$status" -eq 0 ]      # Success
@@ -150,6 +152,7 @@ teardown() {
 ```
 
 #### 3. Test Isolation
+
 ```bash
 setup() {
   # Create isolated environment
@@ -351,6 +354,7 @@ bats tests/test_file.bats --show-output-of-passing-tests
 ### Common Test Issues
 
 #### Permission Errors
+
 ```bash
 # Fix in setup()
 chmod 600 "$TEST_FILE"
@@ -358,6 +362,7 @@ chmod 700 "$TEST_DIR"
 ```
 
 #### Race Conditions
+
 ```bash
 # Add sleep for timing issues
 sleep 0.1
@@ -378,6 +383,7 @@ retry() {
 ```
 
 #### Environment Pollution
+
 ```bash
 # Save and restore environment
 setup() {

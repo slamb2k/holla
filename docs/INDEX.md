@@ -5,6 +5,7 @@ Welcome to the Yubikey PAM Installer documentation. This index provides navigati
 ## 📚 Documentation Sections
 
 ### [Getting Started](./getting-started/)
+
 Essential guides for new users and initial setup.
 
 - [Installation Guide](./getting-started/installation.md) - System requirements and installation instructions
@@ -12,6 +13,7 @@ Essential guides for new users and initial setup.
 - [Prerequisites](./getting-started/prerequisites.md) - Required software and hardware
 
 ### [Development](./development/)
+
 Guides for developers contributing to the project.
 
 - [Local Setup](./development/local-setup.md) - Setting up your development environment
@@ -20,6 +22,7 @@ Guides for developers contributing to the project.
 - [Troubleshooting](./development/troubleshooting.md) - Common issues and solutions
 
 ### [Architecture](./architecture/)
+
 Technical documentation about system design and implementation.
 
 - [PAM Integration](./architecture/pam-integration.md) - How the tool integrates with Linux PAM
@@ -28,6 +31,7 @@ Technical documentation about system design and implementation.
 - [Authentication Flow](./architecture/auth-flow.md) - Complete authentication workflow
 
 ### [Deployment](./deployment/)
+
 Production deployment and packaging documentation.
 
 - [Packaging Guide](./deployment/packaging.md) - Creating .deb/.rpm packages
@@ -36,6 +40,7 @@ Production deployment and packaging documentation.
 - [Rollback Procedures](./deployment/rollback.md) - Emergency recovery procedures
 
 ### [Integrations](./integrations/)
+
 External service and tool integrations.
 
 - [SSH Configuration](./integrations/ssh.md) - Configuring SSH with Yubikey
@@ -43,6 +48,7 @@ External service and tool integrations.
 - [Container Support](./integrations/containers.md) - Docker and Kubernetes considerations
 
 ### [API](./api/)
+
 API references and technical specifications.
 
 - [Shell Functions](./api/shell-functions.md) - Complete function reference
@@ -50,6 +56,7 @@ API references and technical specifications.
 - [Exit Codes](./api/exit-codes.md) - Error codes and their meanings
 
 ### [Temporary](./temporary/)
+
 Work-in-progress documentation and migration guides.
 
 - Active development documentation
@@ -59,22 +66,26 @@ Work-in-progress documentation and migration guides.
 ## 🔍 Quick Links
 
 ### Most Popular Pages
+
 1. [Quick Start Guide](./getting-started/quick-start.md)
 2. [Installation Guide](./getting-started/installation.md)
 3. [Troubleshooting](./development/troubleshooting.md)
 4. [Security Model](./architecture/security-model.md)
 
 ### For System Administrators
+
 - [Installation Guide](./getting-started/installation.md)
 - [Configuration Management](./deployment/configuration.md)
 - [Rollback Procedures](./deployment/rollback.md)
 
 ### For Developers
+
 - [Local Setup](./development/local-setup.md)
 - [Testing Guide](./development/testing.md)
 - [Component Overview](./architecture/components.md)
 
 ### For Security Auditors
+
 - [Security Model](./architecture/security-model.md)
 - [PAM Integration](./architecture/pam-integration.md)
 - [Authentication Flow](./architecture/auth-flow.md)

@@ -31,6 +31,7 @@ You are a specialized information retrieval agent for Agent OS workflows. Your r
 ## Output Format
 
 For new information:
+
 ```
 📄 Retrieved from [file-path]
 
@@ -38,6 +39,7 @@ For new information:
 ```
 
 For already-in-context information:
+
 ```
 ✓ Already in context: [brief description of what was requested]
 ```
@@ -62,6 +64,7 @@ Request: "Get Task 2.1 details from tasks.md"
 - Keep responses concise
 
 Example usage:
+
 - "Get the product pitch from mission-lite.md"
 - "Find Ruby style rules from code-style.md"
 - "Extract Task 3 requirements from the password-reset spec"

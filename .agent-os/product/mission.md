@@ -15,12 +15,14 @@ Yubikey PAM Installer is a terminal-based Linux configuration tool that helps se
 ### User Personas
 
 **Security-Focused SysAdmin** (30-45 years old)
+
 - **Role:** Senior System Administrator
 - **Context:** Manages 50+ Linux servers for a mid-sized company
 - **Pain Points:** Complex PAM configuration, inconsistent 2FA implementation across systems, difficulty training users on security tools
 - **Goals:** Standardize authentication security, reduce password-based vulnerabilities, maintain compliance requirements
 
 **Privacy-Conscious Developer** (25-40 years old)
+
 - **Role:** Software Developer / DevOps Engineer
 - **Context:** Works with sensitive code repositories and production systems
 - **Pain Points:** Remembering multiple complex passwords, risk of credential theft, cumbersome 2FA solutions

@@ -85,76 +85,76 @@ PACKAGE_DIR = $(BUILD_DIR)/package
 all: package
 
 clean:
-	rm -rf $(BUILD_DIR)
+ rm -rf $(BUILD_DIR)
 
 prepare:
-	mkdir -p $(PACKAGE_DIR)/usr/local/bin
-	mkdir -p $(PACKAGE_DIR)/usr/share/$(NAME)/src
-	mkdir -p $(PACKAGE_DIR)/usr/share/$(NAME)/docs
-	mkdir -p $(PACKAGE_DIR)/etc/yubikey-pam
-	
-	# Copy executables
-	cp install.sh $(PACKAGE_DIR)/usr/local/bin/yubikey-pam-install
-	cp uninstall.sh $(PACKAGE_DIR)/usr/local/bin/yubikey-pam-uninstall
-	
-	# Copy source files
-	cp -r src/* $(PACKAGE_DIR)/usr/share/$(NAME)/src/
-	
-	# Copy documentation
-	cp -r docs/* $(PACKAGE_DIR)/usr/share/$(NAME)/docs/
-	
-	# Set permissions
-	chmod 755 $(PACKAGE_DIR)/usr/local/bin/*
-	chmod 644 $(PACKAGE_DIR)/usr/share/$(NAME)/src/*
-	chmod 755 $(PACKAGE_DIR)/usr/share/$(NAME)/src/*.sh
+ mkdir -p $(PACKAGE_DIR)/usr/local/bin
+ mkdir -p $(PACKAGE_DIR)/usr/share/$(NAME)/src
+ mkdir -p $(PACKAGE_DIR)/usr/share/$(NAME)/docs
+ mkdir -p $(PACKAGE_DIR)/etc/yubikey-pam
+ 
+ # Copy executables
+ cp install.sh $(PACKAGE_DIR)/usr/local/bin/yubikey-pam-install
+ cp uninstall.sh $(PACKAGE_DIR)/usr/local/bin/yubikey-pam-uninstall
+ 
+ # Copy source files
+ cp -r src/* $(PACKAGE_DIR)/usr/share/$(NAME)/src/
+ 
+ # Copy documentation
+ cp -r docs/* $(PACKAGE_DIR)/usr/share/$(NAME)/docs/
+ 
+ # Set permissions
+ chmod 755 $(PACKAGE_DIR)/usr/local/bin/*
+ chmod 644 $(PACKAGE_DIR)/usr/share/$(NAME)/src/*
+ chmod 755 $(PACKAGE_DIR)/usr/share/$(NAME)/src/*.sh
 
 deb: prepare
-	fpm -s dir -t deb \
-		-n $(NAME) \
-		-v $(VERSION) \
-		--iteration $(RELEASE) \
-		-a $(ARCH) \
-		-m "$(MAINTAINER)" \
-		--description "$(DESCRIPTION)" \
-		--url "$(URL)" \
-		--license "$(LICENSE)" \
-		--depends $(DEB_DEPENDS) \
-		--after-install scripts/postinst.sh \
-		--before-remove scripts/prerm.sh \
-		--after-remove scripts/postrm.sh \
-		-C $(PACKAGE_DIR) \
-		.
+ fpm -s dir -t deb \
+  -n $(NAME) \
+  -v $(VERSION) \
+  --iteration $(RELEASE) \
+  -a $(ARCH) \
+  -m "$(MAINTAINER)" \
+  --description "$(DESCRIPTION)" \
+  --url "$(URL)" \
+  --license "$(LICENSE)" \
+  --depends $(DEB_DEPENDS) \
+  --after-install scripts/postinst.sh \
+  --before-remove scripts/prerm.sh \
+  --after-remove scripts/postrm.sh \
+  -C $(PACKAGE_DIR) \
+  .
 
 rpm: prepare
-	fpm -s dir -t rpm \
-		-n $(NAME) \
-		-v $(VERSION) \
-		--iteration $(RELEASE) \
-		-a $(ARCH) \
-		-m "$(MAINTAINER)" \
-		--description "$(DESCRIPTION)" \
-		--url "$(URL)" \
-		--license "$(LICENSE)" \
-		--depends $(RPM_DEPENDS) \
-		--after-install scripts/postinst.sh \
-		--before-remove scripts/prerm.sh \
-		--after-remove scripts/postrm.sh \
-		-C $(PACKAGE_DIR) \
-		.
+ fpm -s dir -t rpm \
+  -n $(NAME) \
+  -v $(VERSION) \
+  --iteration $(RELEASE) \
+  -a $(ARCH) \
+  -m "$(MAINTAINER)" \
+  --description "$(DESCRIPTION)" \
+  --url "$(URL)" \
+  --license "$(LICENSE)" \
+  --depends $(RPM_DEPENDS) \
+  --after-install scripts/postinst.sh \
+  --before-remove scripts/prerm.sh \
+  --after-remove scripts/postrm.sh \
+  -C $(PACKAGE_DIR) \
+  .
 
 arch: prepare
-	fpm -s dir -t pacman \
-		-n $(NAME) \
-		-v $(VERSION) \
-		--iteration $(RELEASE) \
-		-a $(ARCH) \
-		-m "$(MAINTAINER)" \
-		--description "$(DESCRIPTION)" \
-		--url "$(URL)" \
-		--license "$(LICENSE)" \
-		--depends pam-u2f \
-		-C $(PACKAGE_DIR) \
-		.
+ fpm -s dir -t pacman \
+  -n $(NAME) \
+  -v $(VERSION) \
+  --iteration $(RELEASE) \
+  -a $(ARCH) \
+  -m "$(MAINTAINER)" \
+  --description "$(DESCRIPTION)" \
+  --url "$(URL)" \
+  --license "$(LICENSE)" \
+  --depends pam-u2f \
+  -C $(PACKAGE_DIR) \
+  .
 
 package: deb rpm arch
 ```

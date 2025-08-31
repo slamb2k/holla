@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Architecture
 
 ### Technology Stack
+
 - **Primary Language**: Bash shell scripting (5.0+)
 - **PAM Integration**: pam_u2f and pam_yubico modules
 - **GUI Dialogs**: GNOME Polkit authentication dialogs
@@ -17,6 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Packaging**: System packages via fpm (deb/rpm/pacman)
 
 ### Key System Components
+
 - **PAM Configuration**: Modifies files in /etc/pam.d/ for sudo, su, gdm, lightdm, SSH
 - **U2F Registration**: Uses pamu2fcfg for Yubikey registration with user accounts
 - **Environment Detection**: Detects terminal vs GUI vs SSH contexts for appropriate auth prompts
@@ -25,6 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Code Quality
+
 ```bash
 # Static analysis for shell scripts
 shellcheck *.sh
@@ -37,6 +40,7 @@ bats test/*.bats
 ```
 
 ### Building & Packaging
+
 ```bash
 # Create system package (requires fpm)
 make package  # Creates .deb/.rpm packages
@@ -49,6 +53,7 @@ sudo ./uninstall.sh
 ```
 
 ### Testing PAM Configuration
+
 ```bash
 # Test sudo authentication
 sudo -k && sudo echo "Auth successful"
@@ -65,17 +70,20 @@ sudo pamtester sudo $USER authenticate
 This project uses Agent OS for project management and AI-assisted development.
 
 ### Product Documentation
+
 - `.agent-os/product/mission.md` - Full product vision and features
 - `.agent-os/product/mission-lite.md` - Condensed mission for AI context
 - `.agent-os/product/tech-stack.md` - Complete technical stack
 - `.agent-os/product/roadmap.md` - Three-phase development plan
 
 ### Development Workflow
+
 1. Use `/create-spec` to generate feature specifications from roadmap items
 2. Use `/create-tasks` to break specs into implementation tasks
 3. Use `/execute-tasks` to implement features with AI assistance
 
 ### Code Style Guidelines
+
 - **Bash Scripts**: Follow shellcheck recommendations
 - **Indentation**: 2 spaces (never tabs)
 - **Variables**: Use snake_case for variables, UPPER_SNAKE_CASE for constants
@@ -87,12 +95,14 @@ This project uses Agent OS for project management and AI-assisted development.
 **WARNING**: PAM misconfiguration can lock you out of your system permanently.
 
 ### Before ANY PAM Changes
+
 1. Create backup: `sudo cp -r /etc/pam.d /etc/pam.d.backup-$(date +%Y%m%d)`
 2. Keep root terminal open: `sudo -s` in separate terminal
 3. Test in VM/container first
 4. Never close all terminals until changes verified
 
 ### Recovery Procedures
+
 - Boot to recovery mode if locked out
 - Mount root filesystem and restore /etc/pam.d.backup-*
 - Or add `init=/bin/bash` to kernel parameters for emergency shell
@@ -100,18 +110,21 @@ This project uses Agent OS for project management and AI-assisted development.
 ## Project-Specific Context
 
 ### Authentication Flow States
+
 1. **Terminal (TTY)**: Direct keyboard input, no GUI
 2. **Terminal in Desktop**: Terminal emulator with GUI available
 3. **GUI Application**: Polkit dialogs for authentication
 4. **SSH Session**: Remote authentication considerations
 
 ### Yubikey U2F Implementation
+
 - Registration stored in `~/.config/Yubico/u2f_keys`
 - PAM stack order: pam_u2f.so → pam_unix.so (fallback)
 - Touch timeout: 30 seconds default
 - LED feedback via libu2f-host
 
 ### File Locations
+
 - PAM configs: `/etc/pam.d/*`
 - U2F mappings: `~/.config/Yubico/u2f_keys`
 - System backup: `/etc/pam.d.backup-*`
@@ -121,7 +134,7 @@ This project uses Agent OS for project management and AI-assisted development.
 
 The project documentation has been reorganized for better AI agent access:
 
-```
+```text
 docs/
 ├── INDEX.md                  # Main documentation index
 ├── getting-started/          # Setup and prerequisites

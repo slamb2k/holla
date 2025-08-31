@@ -150,15 +150,16 @@ Use the project-manager subagent to create a recap document in .agent-os/recaps/
 </instructions>
 
 <recap_template>
-  # [yyyy-mm-dd] Recap: Feature Name
+
+# [yyyy-mm-dd] Recap: Feature Name
 
   This recaps what was built for the spec documented at .agent-os/specs/[spec-folder-name]/spec.md.
 
-  ## Recap
+## Recap
 
   [1 paragraph summary plus short bullet list of what was completed]
 
-  ## Context
+## Context
 
   [Copy the summary found in spec-lite.md to provide concise context of what the initial goal for this spec was]
 </recap_template>
@@ -184,23 +185,26 @@ Use the project-manager subagent to create a recap document in .agent-os/recaps/
 Use the project-manager subagent to create a structured summary message with emojis showing what was done, any issues, testing instructions, and PR link.
 
 <summary_template>
-  ## ✅ What's been done
+
+## ✅ What's been done
 
   1. **[FEATURE_1]** - [ONE_SENTENCE_DESCRIPTION]
   2. **[FEATURE_2]** - [ONE_SENTENCE_DESCRIPTION]
 
-  ## ⚠️ Issues encountered
+## ⚠️ Issues encountered
 
   [ONLY_IF_APPLICABLE]
-  - **[ISSUE_1]** - [DESCRIPTION_AND_REASON]
 
-  ## 👀 Ready to test in browser
+- **[ISSUE_1]** - [DESCRIPTION_AND_REASON]
+
+## 👀 Ready to test in browser
 
   [ONLY_IF_APPLICABLE]
+
   1. [STEP_1_TO_TEST]
   2. [STEP_2_TO_TEST]
 
-  ## 📦 Pull Request
+## 📦 Pull Request
 
   View PR: [GITHUB_PR_URL]
 </summary_template>
