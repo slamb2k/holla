@@ -1,6 +1,6 @@
 # Test and development Dockerfile for Yubikey PAM Installer
 # This provides a clean environment for testing PAM integration
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
