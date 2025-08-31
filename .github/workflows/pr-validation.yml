@@ -90,10 +90,7 @@ jobs:
       - name: Markdown Lint
         uses: DavidAnson/markdownlint-cli2-action@v20
         with:
-          globs: |
-            **/*.md
-            #.agent-os/**
-            #.claude/**
+          globs: '**/*.md'
 
   # Unit tests - fast isolated tests
   unit-tests:
