@@ -10,6 +10,10 @@ on:
       - '.github/CODEOWNERS'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: write
+
 env:
   SHELL: /bin/bash
 
@@ -202,29 +206,35 @@ jobs:
       - name: Comment on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
+        continue-on-error: true
         with:
           script: |
-            const status = '${{ needs.lint-shellcheck.result }}' === 'success' &&
-                          '${{ needs.format-check.result }}' === 'success' &&
-                          '${{ needs.unit-tests.result }}' === 'success' ? '✅' : '❌';
-            
-            const body = `## PR Validation Results ${status}
-            
-            | Check | Status |
-            |-------|--------|
-            | Lint (ShellCheck) | ${{ needs.lint-shellcheck.result }} |
-            | Format (shfmt) | ${{ needs.format-check.result }} |
-            | Security Scan | ${{ needs.security-scan.result }} |
-            | Documentation | ${{ needs.docs-check.result }} |
-            | Unit Tests | ${{ needs.unit-tests.result }} |
-            | Integration Tests | ${{ needs.integration-test.result }} |
-            | Compatibility | ${{ needs.compatibility-check.result }} |
-            
-            ${status === '✅' ? 'All required checks passed! Ready for review.' : 'Some checks failed. Please review the errors above.'}`;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
+            try {
+              const status = '${{ needs.lint-shellcheck.result }}' === 'success' &&
+                            '${{ needs.format-check.result }}' === 'success' &&
+                            '${{ needs.unit-tests.result }}' === 'success' ? '✅' : '❌';
+              
+              const body = `## PR Validation Results ${status}
+              
+              | Check | Status |
+              |-------|--------|
+              | Lint (ShellCheck) | ${{ needs.lint-shellcheck.result }} |
+              | Format (shfmt) | ${{ needs.format-check.result }} |
+              | Security Scan | ${{ needs.security-scan.result }} |
+              | Documentation | ${{ needs.docs-check.result }} |
+              | Unit Tests | ${{ needs.unit-tests.result }} |
+              | Integration Tests | ${{ needs.integration-test.result }} |
+              | Compatibility | ${{ needs.compatibility-check.result }} |
+              
+              ${status === '✅' ? 'All required checks passed! Ready for review.' : 'Some checks failed. Please review the errors above.'}`;
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            } catch (error) {
+              console.log('Failed to comment on PR:', error.message);
+              console.log('This is expected for PRs from forks or when permissions are limited.');
+            }
