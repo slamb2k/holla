@@ -107,7 +107,7 @@ jobs:
           echo "${{ steps.version.outputs.version }}" > artifacts/VERSION
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-artifacts-${{ steps.version.outputs.version }}
           path: artifacts/
@@ -198,7 +198,7 @@ jobs:
           ls -la /usr/share/yubikey-pam-installer/
 
       - name: Upload package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: package-${{ matrix.package-type }}-${{ needs.validate.outputs.version }}
           path: |
@@ -256,7 +256,7 @@ jobs:
           docker save yubikey-pam-installer:${{ needs.validate.outputs.version }} | gzip > yubikey-pam-installer-${{ needs.validate.outputs.version }}.tar.gz
 
       - name: Upload container image
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: container-${{ needs.validate.outputs.version }}
           path: yubikey-pam-installer-*.tar.gz
